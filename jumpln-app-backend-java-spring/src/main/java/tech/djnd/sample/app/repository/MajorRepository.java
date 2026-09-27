@@ -1,4 +1,9 @@
 package tech.djnd.sample.app.repository;
 
-public class MajorRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import tech.djnd.sample.app.domain.Major;
+
+@Repository
+public interface MajorRepository extends JpaRepository<Major,Integer> {
 }

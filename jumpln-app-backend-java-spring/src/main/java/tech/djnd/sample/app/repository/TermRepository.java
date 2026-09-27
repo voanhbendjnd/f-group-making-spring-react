@@ -1,4 +1,9 @@
 package tech.djnd.sample.app.repository;
 
-public class TermRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import tech.djnd.sample.app.domain.Term;
+
+@Repository
+public interface TermRepository extends JpaRepository<Term,Integer> {
 }

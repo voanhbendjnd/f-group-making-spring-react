@@ -1,4 +1,8 @@
 package tech.djnd.sample.app.repository;
 
-public class StudentRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import tech.djnd.sample.app.domain.Student;
+@Repository
+public interface StudentRepository extends JpaRepository<Student, Long> {
 }
