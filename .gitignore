@@ -1,5 +1,6 @@
 /jumpln-app-backend-java-spring/src/main/resources/application.properties
 /jumpln-app-backend-java-spring/src/main/resources
+<<<<<<< HEAD
 /jumpln-app-backend-java-spring/.gradle
 **/.gradle/
 **/mysql_data/
@@ -12,3 +13,6 @@ mysql_data/
 # Environment variables
 .env
 .env.*
+=======
+/jumpln-app-backend-java-spring/.gradle
+>>>>>>> 374b402 (feat send notification for mul account)

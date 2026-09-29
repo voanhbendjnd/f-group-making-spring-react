@@ -17,25 +17,25 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import tech.djnd.sample.app.config.Constants;
 import tech.djnd.sample.app.service.dto.UserDTO;
 
 
 @Service
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@RequiredArgsConstructor
 public class MailService {
-    JavaMailSender javaMailSender;
-    final MessageSource messageSource;
-    final SpringTemplateEngine springTemplateEngine;
+   private final  JavaMailSender javaMailSender;
+    private final MessageSource messageSource;
+    private final SpringTemplateEngine springTemplateEngine;
     private static final Logger LOG = LoggerFactory.getLogger(MailService.class);
     private static final String USER = "user";
     private static final String BASE_URL = "baseUrl";
     private static final String URL = "localhost:3000";
 
+    public MailService(MessageSource messageSource, SpringTemplateEngine springTemplateEngine, JavaMailSender javaMailSender) {
+        this.messageSource = messageSource;
+        this.javaMailSender = javaMailSender;
+        this.springTemplateEngine = springTemplateEngine;
+    }
     @Async
     public void sendEmail(String to, String subject, String content, boolean isMultipart, boolean isHtml) {
         sendEmailSync(to, subject, content, isMultipart, isHtml);
