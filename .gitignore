@@ -4,3 +4,11 @@
 **/.gradle/
 **/mysql_data/
 mysql_data/
+
+# IDE configurations
+.vscode/
+.idea/
+
+# Environment variables
+.env
+.env.*
