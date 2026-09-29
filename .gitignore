@@ -2,3 +2,5 @@
 /jumpln-app-backend-java-spring/src/main/resources
 /jumpln-app-backend-java-spring/.gradle
 **/.gradle/
+**/mysql_data/
+mysql_data/
