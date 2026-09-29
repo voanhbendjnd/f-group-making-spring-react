@@ -7,12 +7,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import tech.djnd.sample.app.domain.User;
+import tech.djnd.sample.app.security.AuthoritiesConstants;
 import tech.djnd.sample.app.security.CustomUserDetails;
 import tech.djnd.sample.app.service.AuthService;
 import tech.djnd.sample.app.service.MailService;
@@ -23,6 +25,7 @@ import tech.djnd.sample.app.service.dto.UserDTO;
 import tech.djnd.sample.app.service.errors.BadRequestResourceException;
 import tech.djnd.sample.app.web.rest.vm.LoginVM;
 import tech.djnd.sample.app.web.rest.vm.MulUserId;
+import tech.djnd.sample.app.web.rest.vm.ActivateAccountVM;
 
 import java.util.List;
 import java.util.Locale;
@@ -84,8 +87,9 @@ public class AccountResource {
     }
     @PostMapping("/activate")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public void sendRequestActivateAccount(@RequestBody Map<String, String> mp) {
-        String email = mp.get("email");
+        String email = mp == null ? null : mp.get("email");
         if(email == null || email.isBlank()){
             throw new BadRequestResourceException("Email not found", "userManagement", "emailnotfound");
         }
@@ -95,8 +99,15 @@ public class AccountResource {
 
     @PostMapping("/activate/mul")
     @ResponseStatus(HttpStatus.OK)
-    public void sendMulRequestActivateAccount(@RequestBody MulUserId mulUserId){
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    public void sendMulRequestActivateAccount(@Valid @RequestBody MulUserId mulUserId){
         List<Long> userIds = mulUserId.getUserIds();
         notificationAsyncService.sendMailActivatedAccount(userService.initActivateKeyMulAccount(userIds));
+    }
+
+    @PostMapping("/account/activate")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void activateAccount(@Valid @RequestBody ActivateAccountVM vm) {
+        userService.activateAccount(vm.getKey(), vm.getPassword());
     }
 }
