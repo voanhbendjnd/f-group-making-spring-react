@@ -1,3 +1,18 @@
 /jumpln-app-backend-java-spring/src/main/resources/application.properties
 /jumpln-app-backend-java-spring/src/main/resources
+<<<<<<< HEAD
 /jumpln-app-backend-java-spring/.gradle
+=======
+/jumpln-app-backend-java-spring/.gradle
+**/.gradle/
+**/mysql_data/
+mysql_data/
+
+# IDE configurations
+.vscode/
+.idea/
+
+# Environment variables
+.env
+.env.*
+>>>>>>> b2438d54b36243a82961fb4c5485fe64f18e93cf
