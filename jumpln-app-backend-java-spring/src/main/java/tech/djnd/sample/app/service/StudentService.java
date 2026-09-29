@@ -1,8 +1,5 @@
 package tech.djnd.sample.app.service;
 
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -30,25 +27,34 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@RequiredArgsConstructor
 @Transactional
 public class StudentService {
 
-    static final long MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024L; // 5 MB
-    static final String XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-    static final int HEADER_ROW_INDEX = 0;
-    static final int TITLE_ROW_INDEX = 1;
+   private static final long MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024L; // 5 MB
+   private static final String XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+   private static final int HEADER_ROW_INDEX = 0;
+   private static final int TITLE_ROW_INDEX = 1;
 
     // Chỉ số cột trong file Excel (0-based)
-    static final int COL_ROLL_NUMBER = 1;   // Cột B: Mã sinh viên
-    static final int COL_FULL_NAME   = 2;   // Cột C: Họ tên
-    static final int COL_MAJOR       = 3;   // Cột D: Ngành (BEN_CHN_ET_19C,...)
-    static final int COL_MEMBER_CODE = 4;
-    static final int COL_EMAIL = 5;
+   private static final int COL_ROLL_NUMBER = 1;   // Cột B: Mã sinh viên
+   private static final int COL_FULL_NAME   = 2;   // Cột C: Họ tên
+   private static final int COL_MAJOR       = 3;   // Cột D: Ngành (BEN_CHN_ET_19C,...)
+   private static final int COL_MEMBER_CODE = 4;
+   private static final int COL_EMAIL = 5;
     StudentRepository studentRepository;
     MajorRepository majorRepository;
     UserRepository userRepository;
+
+    public StudentService(
+            StudentRepository studentRepository,
+            MajorRepository majorRepository,
+            UserRepository userRepository
+    ){
+        this.studentRepository = studentRepository;
+        this.majorRepository = majorRepository;
+        this.userRepository = userRepository;
+    }
+
     // =========================================================================
     // PUBLIC API
     // =========================================================================

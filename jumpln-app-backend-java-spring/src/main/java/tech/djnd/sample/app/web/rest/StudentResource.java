@@ -1,8 +1,5 @@
 package tech.djnd.sample.app.web.rest;
 
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,12 +21,12 @@ import tech.djnd.sample.app.service.dto.ImportResultDTO;
 @Slf4j
 @RestController
 @RequestMapping("/api/students")
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@RequiredArgsConstructor
 public class StudentResource {
 
-    StudentService studentService;
-
+    private final StudentService studentService;
+    public StudentResource(StudentService studentService) {
+        this.studentService = studentService;
+    }
     /**
      * POST /api/students/import : Import danh sách sinh viên từ file Excel (.xlsx).
      *

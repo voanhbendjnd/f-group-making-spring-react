@@ -1,8 +1,5 @@
 package tech.djnd.sample.app.service;
 
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,26 +12,32 @@ import tech.djnd.sample.app.repository.UserRepository;
 import tech.djnd.sample.app.security.AuthoritiesConstants;
 import tech.djnd.sample.app.service.dto.UserDTO;
 import tech.djnd.sample.app.service.errors.AccessDeniedException;
+import tech.djnd.sample.app.service.errors.BadRequestResourceException;
 import tech.djnd.sample.app.service.errors.DataResourceNotFoundException;
 import tech.djnd.sample.app.web.rest.errors.LoginAlreadyUsedException;
 import tech.jhipster.security.RandomUtil;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@RequiredArgsConstructor
 @Transactional
 public class UserService {
-    UserRepository userRepository;
-    CacheManager cacheManager;
-    PasswordEncoder passwordEncoder;
-    AuthorityRepository authorityRepository;
+    private final UserRepository userRepository;
+    private final CacheManager cacheManager;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthorityRepository authorityRepository;
+    public UserService(UserRepository userRepository,
+                       CacheManager cacheManager,
+                       PasswordEncoder passwordEncoder,
+                       AuthorityRepository authorityRepository) {
+        this.userRepository = userRepository;
+        this.cacheManager = cacheManager;
+        this.passwordEncoder = passwordEncoder;
+        this.authorityRepository = authorityRepository;
+    }
     public User registerUser(UserDTO dto, String password) {
         String normalizedEmail = dto.getEmail().trim().toLowerCase(Locale.ENGLISH);
         userRepository.findOneByEmail(normalizedEmail).ifPresent(existingUser -> {
@@ -94,4 +97,26 @@ public class UserService {
         dto.setActivationKey(user.getActivationKey());
         return dto;
     }
+    public List<UserDTO> initActivateKeyMulAccount(List<Long> userIds){
+        List<User> currentUsers = userRepository.findByIdIn(userIds);
+        Set<Long> userIdSet = currentUsers.stream().map(User::getId).collect(Collectors.toSet());
+        List <String> errorMessages = new ArrayList<>();
+        for(Long userId : userIds){
+            if(!userIdSet.contains(userId)){
+                errorMessages.add(String.format("User with ID '%d' not found", userId));
+            }
+        }
+        if(!errorMessages.isEmpty()){
+            throw new BadRequestResourceException(String.join("/n", errorMessages), "userManagement", "idnotfound");
+        }
+        List<UserDTO> res = new ArrayList<>();
+        for(User user : currentUsers){
+            UserDTO dto = new UserDTO();
+            dto.setEmail(user.getEmail());
+            dto.setActivationKey(RandomUtil.generateActivationKey());
+            res.add(dto);
+        }
+        return res;
+    }
+
 }

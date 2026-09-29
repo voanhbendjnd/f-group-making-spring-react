@@ -6,13 +6,26 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
-@Getter
-@Setter
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public class LoginVM {
     @NotBlank(message = "Username not empty!")
-    String username;
+    private String username;
     @NotBlank(message = "Password not empty!")
     @Size(min = ManagedUserVM.PASSWORD_MIN_LENGTH, max = ManagedUserVM.PASSWORD_MAX_LENGTH)
-    String password;
+    private String password;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }

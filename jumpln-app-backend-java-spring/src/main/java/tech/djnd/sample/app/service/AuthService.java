@@ -1,8 +1,4 @@
 package tech.djnd.sample.app.service;
-
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tech.djnd.sample.app.domain.Authority;
@@ -17,12 +13,15 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@RequiredArgsConstructor
 public class AuthService {
-    UserRepository userRepository;
-    SessionManager sessionManager;
-    SecurityUtils securityUtils;
+   private final UserRepository userRepository;
+    private final SessionManager sessionManager;
+    private final SecurityUtils securityUtils;
+    public AuthService(UserRepository userRepository, SessionManager sessionManager, SecurityUtils securityUtils) {
+        this.userRepository = userRepository;
+        this.sessionManager = sessionManager;
+        this.securityUtils = securityUtils;
+    }
     @Transactional
     public ResLoginDTO generateResLoginDTO(User user){
         ResLoginDTO res = new ResLoginDTO();

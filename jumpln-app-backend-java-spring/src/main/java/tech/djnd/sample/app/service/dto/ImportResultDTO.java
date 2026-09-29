@@ -17,20 +17,41 @@ import java.util.List;
  *   <li>Nếu {@code success = false}: có ít nhất 1 lỗi, không dòng nào được lưu, {@code errors} chứa danh sách lỗi.</li>
  * </ul>
  */
-@Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ImportResultDTO {
 
     /** true nếu import thành công hoàn toàn, false nếu có lỗi validation */
-    boolean success;
+    private boolean success;
 
     /** Số sinh viên đã được lưu vào DB (0 nếu success = false) */
-    int totalImported;
+    private int totalImported;
 
     /** Danh sách lỗi chi tiết (rỗng nếu success = true) */
-    List<ImportRowErrorDTO> errors;
+    private List<ImportRowErrorDTO> errors;
+
+    public boolean isSuccess() {
+        return success;
+    }
+
+    public void setSuccess(boolean success) {
+        this.success = success;
+    }
+
+    public int getTotalImported() {
+        return totalImported;
+    }
+
+    public void setTotalImported(int totalImported) {
+        this.totalImported = totalImported;
+    }
+
+    public List<ImportRowErrorDTO> getErrors() {
+        return errors;
+    }
+
+    public void setErrors(List<ImportRowErrorDTO> errors) {
+        this.errors = errors;
+    }
 }

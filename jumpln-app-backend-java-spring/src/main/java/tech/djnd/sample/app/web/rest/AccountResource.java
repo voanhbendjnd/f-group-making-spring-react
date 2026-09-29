@@ -1,10 +1,6 @@
 package tech.djnd.sample.app.web.rest;
 
-import com.cloudinary.provisioning.Account;
 import jakarta.validation.Valid;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import org.apache.hc.core5.http.HttpHeaders;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -20,27 +16,42 @@ import tech.djnd.sample.app.domain.User;
 import tech.djnd.sample.app.security.CustomUserDetails;
 import tech.djnd.sample.app.service.AuthService;
 import tech.djnd.sample.app.service.MailService;
+import tech.djnd.sample.app.service.NotificationAsyncService;
 import tech.djnd.sample.app.service.UserService;
 import tech.djnd.sample.app.service.dto.ResLoginDTO;
 import tech.djnd.sample.app.service.dto.UserDTO;
 import tech.djnd.sample.app.service.errors.BadRequestResourceException;
 import tech.djnd.sample.app.web.rest.vm.LoginVM;
+import tech.djnd.sample.app.web.rest.vm.MulUserId;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
-@FieldDefaults(level = AccessLevel.PRIVATE)
-@RequiredArgsConstructor
 public class AccountResource {
-    final UserService userService;
-    final AuthenticationManagerBuilder authenticationManagerBuilder;
-    final AuthService authService;
-    final MailService mailService;
+    private final UserService userService;
+    private final AuthenticationManagerBuilder authenticationManagerBuilder;
+    private final AuthService authService;
+    private final MailService mailService;
     @Value("${djnd.jwt.refresh-token-validity-in-seconds}")
     private  Long refreshTokenExpiration;
+    private final NotificationAsyncService notificationAsyncService;
 
+    public AccountResource(
+            UserService userService,
+            AuthenticationManagerBuilder authenticationManagerBuilder,
+            AuthService authService,
+            MailService mailService,
+            NotificationAsyncService notificationAsyncService
+                           ){
+        this.userService = userService;
+        this.authenticationManagerBuilder = authenticationManagerBuilder;
+        this.notificationAsyncService = notificationAsyncService;
+        this.mailService = mailService;
+        this.authService = authService;
+    }
 
     /*
     * vm: username, password
@@ -80,5 +91,12 @@ public class AccountResource {
         }
         UserDTO dto =  userService.initActivatedKeyAccount(email);
         mailService.sendActivationEmail(dto);
+    }
+
+    @PostMapping("/activate/mul")
+    @ResponseStatus(HttpStatus.OK)
+    public void sendMulRequestActivateAccount(@RequestBody MulUserId mulUserId){
+        List<Long> userIds = mulUserId.getUserIds();
+        notificationAsyncService.sendMailActivatedAccount(userService.initActivateKeyMulAccount(userIds));
     }
 }
