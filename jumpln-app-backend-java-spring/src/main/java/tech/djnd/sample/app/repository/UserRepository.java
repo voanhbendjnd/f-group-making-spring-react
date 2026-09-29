@@ -16,6 +16,7 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     String USERS_BY_EMAIL_CACHE = "usersByEmail";
+    @Modifying
     @Query(value = "update User u set u.sessionId = :sessionId where u.id = :userId")
     int updateSessionIdById(@Param("userId") Long userId, @Param("sessionId") String sessionId);
 

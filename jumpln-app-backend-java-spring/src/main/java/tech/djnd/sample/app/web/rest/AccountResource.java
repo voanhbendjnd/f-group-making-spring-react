@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.hc.core5.http.HttpHeaders;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -14,26 +15,29 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import tech.djnd.sample.app.domain.User;
 import tech.djnd.sample.app.security.CustomUserDetails;
 import tech.djnd.sample.app.service.AuthService;
+import tech.djnd.sample.app.service.MailService;
+import tech.djnd.sample.app.service.UserService;
 import tech.djnd.sample.app.service.dto.ResLoginDTO;
+import tech.djnd.sample.app.service.dto.UserDTO;
+import tech.djnd.sample.app.service.errors.BadRequestResourceException;
 import tech.djnd.sample.app.web.rest.vm.LoginVM;
 
 import java.util.Locale;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 public class AccountResource {
-
+    final UserService userService;
     final AuthenticationManagerBuilder authenticationManagerBuilder;
     final AuthService authService;
+    final MailService mailService;
     @Value("${djnd.jwt.refresh-token-validity-in-seconds}")
     private  Long refreshTokenExpiration;
 
@@ -66,5 +70,15 @@ public class AccountResource {
         catch(BadCredentialsException ex){
             throw new tech.djnd.sample.app.web.rest.errors.BadCredentialsException();
         }
+    }
+    @PostMapping("/activate")
+    @ResponseStatus(HttpStatus.OK)
+    public void sendRequestActivateAccount(@RequestBody Map<String, String> mp) {
+        String email = mp.get("email");
+        if(email == null || email.isBlank()){
+            throw new BadRequestResourceException("Email not found", "userManagement", "emailnotfound");
+        }
+        UserDTO dto =  userService.initActivatedKeyAccount(email);
+        mailService.sendActivationEmail(dto);
     }
 }

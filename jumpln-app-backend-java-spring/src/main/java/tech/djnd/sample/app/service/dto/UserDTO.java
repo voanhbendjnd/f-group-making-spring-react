@@ -34,7 +34,7 @@ public class UserDTO {
     Instant lastModifiedDate;
     boolean activated;
     Set<String> authorities;
-
+    String activationKey;
     public UserDTO() {
     }
 

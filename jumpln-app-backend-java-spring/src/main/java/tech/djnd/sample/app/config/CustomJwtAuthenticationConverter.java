@@ -33,10 +33,10 @@ public class CustomJwtAuthenticationConverter implements Converter<Jwt, Collecti
     }
     @Override
     public Collection<GrantedAuthority> convert(Jwt source) {
-        String loginName = source.getSubject(); // username
+        String email = source.getSubject(); // username
         String sessionId = source.getClaimAsString("sessionId");
-        if(loginName != null && sessionId != null) {
-            boolean isValidSession = sessionManager.isValidSessionId(loginName, sessionId);
+        if(email != null && sessionId != null) {
+            boolean isValidSession = sessionManager.isValidSessionIdByEmail(email, sessionId);
             if(!isValidSession) {
                 throw new BadCredentialsException("Invalid session id");
             }

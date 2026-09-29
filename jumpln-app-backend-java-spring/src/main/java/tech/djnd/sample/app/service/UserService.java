@@ -14,7 +14,10 @@ import tech.djnd.sample.app.repository.AuthorityRepository;
 import tech.djnd.sample.app.repository.UserRepository;
 import tech.djnd.sample.app.security.AuthoritiesConstants;
 import tech.djnd.sample.app.service.dto.UserDTO;
+import tech.djnd.sample.app.service.errors.AccessDeniedException;
+import tech.djnd.sample.app.service.errors.DataResourceNotFoundException;
 import tech.djnd.sample.app.web.rest.errors.LoginAlreadyUsedException;
+import tech.jhipster.security.RandomUtil;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -76,5 +79,19 @@ public class UserService {
         List<Long> currentUserIds = currentUsers.stream().map(User::getId).toList();
         userRepository.deleteByIdIn(currentUserIds);
         currentUsers.forEach(this::clearUserCaches);
+    }
+
+    public UserDTO initActivatedKeyAccount(String email){
+        String normalizedEmail = email.trim().toLowerCase(Locale.ENGLISH);
+        User user = userRepository.findOneByEmail(normalizedEmail).orElseThrow(() -> new DataResourceNotFoundException(String.format("Email '%s' not found", normalizedEmail), "userManagement", "emailnotfound"));
+        if(user.getActivated()){
+            throw new AccessDeniedException("account");
+        }
+        user.setActivationKey(RandomUtil.generateActivationKey());
+        userRepository.save(user);
+        UserDTO dto = new UserDTO();
+        dto.setEmail(normalizedEmail);
+        dto.setActivationKey(user.getActivationKey());
+        return dto;
     }
 }

@@ -97,6 +97,7 @@ public class SecurityConfiguration {
                         auth -> auth
                                 .requestMatchers(HttpMethod.POST, "/api/register").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/activate").permitAll()
                                 .requestMatchers(whiteList).permitAll()
                                 .anyRequest().authenticated()
                 )

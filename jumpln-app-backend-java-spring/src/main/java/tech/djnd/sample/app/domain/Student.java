@@ -28,5 +28,11 @@ public class Student{
     @NotNull
     @Column(name = "major_code", nullable = false)
     String majorCode;
+    @NotNull
+    @Column(name = "member_code", nullable = false)
+    String memberCode;
+    @NotNull
+    @Column(name = "email", nullable = false)
+    String email;
 
 }

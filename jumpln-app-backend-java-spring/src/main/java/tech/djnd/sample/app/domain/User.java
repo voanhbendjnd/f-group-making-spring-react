@@ -38,9 +38,8 @@ public class User extends AbstractAuditingEntity <Long> implements Serializable 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @JsonIgnore
-    @NotNull
     @Size(max = 255)
-    @Column(length = 255, unique = true, nullable = false, name = "password_hash")
+    @Column(length = 255, name = "password_hash")
     private String password;
     @Size(max = 50)
     private String name;
@@ -67,8 +66,7 @@ public class User extends AbstractAuditingEntity <Long> implements Serializable 
 
     @Column(name = "reset_date")
     private Instant resetDate = null;
-    @Column(name = "login_type")
-    private String loginType;
+
     @Column(name ="session_id")
     private String sessionId;
     @JsonIgnore
