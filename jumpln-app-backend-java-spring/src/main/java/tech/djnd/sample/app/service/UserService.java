@@ -166,6 +166,51 @@ public class UserService {
         clearUserCaches(user);
     }
 
+    public tech.djnd.sample.app.service.dto.ActivationKeyVerifyDTO verifyActivationKey(String activationKey) {
+        if (activationKey == null || activationKey.isBlank()) {
+            throw new BadRequestResourceException(
+                    "Activation key must not be blank",
+                    "userManagement",
+                    "invalidactivationkey"
+            );
+        }
+        Instant now = Instant.now();
+        User user = userRepository.findByActivationKey(activationKey)
+                .filter(candidate -> Boolean.FALSE.equals(candidate.getActivated()))
+                .filter(candidate -> isActivationKeyValid(candidate, now))
+                .orElseThrow(() -> new BadRequestResourceException(
+                        "Activation key is invalid or expired",
+                        "userManagement",
+                        "invalidactivationkey"
+                ));
+
+        return tech.djnd.sample.app.service.dto.ActivationKeyVerifyDTO.builder()
+                .valid(true)
+                .email(user.getEmail())
+                .name(user.getName())
+                .build();
+    }
+
+    public UserDTO initActivatedKeyAccountById(Long userId) {
+        if (userId == null) {
+            throw new BadRequestResourceException("User ID must not be null", "userManagement", "idnull");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BadRequestResourceException("User not found", "userManagement", "usernotfound"));
+
+        if (Boolean.TRUE.equals(user.getActivated())) {
+            throw new BadRequestResourceException("User is already activated", "userManagement", "alreadyactivated");
+        }
+
+        assignNewActivationKey(user);
+        userRepository.save(user);
+
+        UserDTO dto = new UserDTO();
+        dto.setEmail(user.getEmail());
+        dto.setActivationKey(user.getActivationKey());
+        return dto;
+    }
+
     private void assignNewActivationKey(User user) {
         user.setActivationKey(RandomUtil.generateActivationKey());
         user.setActivationKeyExpiresAt(Instant.now().plus(ACTIVATION_KEY_VALIDITY_DAYS, ChronoUnit.DAYS));

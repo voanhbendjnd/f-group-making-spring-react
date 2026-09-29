@@ -35,6 +35,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<User> findOneByActivationKey(String activationKey);
 
+    Optional<User> findByActivationKey(String activationKey);
+
     List<User> findAllByActivatedIsFalseAndActivationKeyNotNullAndLastModifiedDateBefore(Instant lastModifiedDateBefore);
 
     @Query(value = "delete from User u where u.id in :userIds")

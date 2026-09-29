@@ -9,7 +9,10 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import tech.djnd.sample.app.service.UserService;
+import tech.djnd.sample.app.service.dto.ActivationKeyVerifyDTO;
 
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -94,6 +97,16 @@ class AccountResourceSecurityTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"userIds\":[null,0,-1]}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void verifyActivationKeyIsPublic() throws Exception {
+        when(userService.verifyActivationKey("valid-key"))
+                .thenReturn(ActivationKeyVerifyDTO.builder().valid(true).email("user@example.com").name("Student").build());
+
+        mockMvc.perform(get("/api/account/activate/verify")
+                        .param("key", "valid-key"))
+                .andExpect(status().isOk());
     }
 
     @Test
