@@ -1,0 +1,76 @@
+import React, { forwardRef, useState } from 'react';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  hint?: string;
+  error?: string;
+  required?: boolean;
+}
+
+export const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ label, hint, error, required, type = 'text', className = '', id, ...props }, ref) => {
+    const [showPassword, setShowPassword] = useState(false);
+    const inputId = id || `input-${Math.random().toString(36).substring(2, 9)}`;
+    const isPassword = type === 'password';
+    const effectiveType = isPassword ? (showPassword ? 'text' : 'password') : type;
+
+    return (
+      <div className="form-group">
+        {label && (
+          <label htmlFor={inputId} className="form-label">
+            <span>
+              {label}
+              {required && <span className="required">*</span>}
+            </span>
+          </label>
+        )}
+
+        <div style={{ position: 'relative', width: '100%' }}>
+          <input
+            ref={ref}
+            id={inputId}
+            type={effectiveType}
+            className={`form-control ${error ? 'is-invalid' : ''} ${className}`}
+            style={isPassword ? { paddingRight: '2.5rem' } : undefined}
+            {...props}
+          />
+          {isPassword && (
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              style={{
+                position: 'absolute',
+                right: '0.75rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                color: 'var(--color-text-subtle)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '4px',
+              }}
+              tabIndex={-1}
+              aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiển thị mật khẩu'}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          )}
+        </div>
+
+        {hint && !error && <div className="form-hint">{hint}</div>}
+
+        {error && (
+          <div className="form-error">
+            <AlertCircle size={14} />
+            <span>{error}</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+);
+
+Input.displayName = 'Input';
