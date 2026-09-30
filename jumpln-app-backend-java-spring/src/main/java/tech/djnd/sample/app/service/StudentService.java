@@ -147,7 +147,7 @@ public class StudentService {
                 .toList();
 
         ResultPaginationDTO.Meta meta = ResultPaginationDTO.Meta.builder()
-                .page(pageable.getPageNumber())
+                .page(pageable.getPageNumber() + 1)
                 .pageSize(pageable.getPageSize())
                 .pages(page.getTotalPages())
                 .total(page.getTotalElements())
