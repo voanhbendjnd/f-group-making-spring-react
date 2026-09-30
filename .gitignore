@@ -19,4 +19,5 @@ mysql_data/
 # Environment variables
 .env
 .env.*
+!**/.env.example
 
