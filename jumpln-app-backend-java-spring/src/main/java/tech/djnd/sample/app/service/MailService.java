@@ -25,14 +25,13 @@ import tech.djnd.sample.app.service.dto.UserDTO;
 
 @Service
 public class MailService {
-   private final  JavaMailSender javaMailSender;
+    private final  JavaMailSender javaMailSender;
     private final MessageSource messageSource;
     private final SpringTemplateEngine springTemplateEngine;
     private static final Logger LOG = LoggerFactory.getLogger(MailService.class);
     private static final String USER = "user";
     private static final String BASE_URL = "baseUrl";
     private final String clientBaseUrl;
-
     public MailService(
             MessageSource messageSource,
             SpringTemplateEngine springTemplateEngine,

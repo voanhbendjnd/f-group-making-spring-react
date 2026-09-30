@@ -67,6 +67,9 @@ public class UserService {
         this.clearUserCaches(existingUser);
         return true;
     }
+    /*
+    * có mục đích là xóa bản User cũ trong cache, vì trước khi activate, User đó có thể đã được cache với trạng thái cũ.
+    * */
     private void clearUserCaches(User user){
         var cacheByEmail = cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE);
         if(cacheByEmail != null){
