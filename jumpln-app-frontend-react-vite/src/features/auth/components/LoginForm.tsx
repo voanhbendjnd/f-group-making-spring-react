@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { LogIn, Info, ShieldAlert } from 'lucide-react';
 import { useAuth } from '@/app/providers/AuthContext';
 import { Button } from '@/components/common/Button';
@@ -99,12 +99,26 @@ export const LoginForm: React.FC = () => {
           })}
         />
 
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-0.375rem', marginBottom: '1rem' }}>
+          <Link
+            to="/forgot-password"
+            style={{
+              fontSize: '0.8125rem',
+              color: 'var(--color-primary)',
+              textDecoration: 'none',
+              fontWeight: 500,
+            }}
+          >
+            Quên mật khẩu?
+          </Link>
+        </div>
+
         <Button
           type="submit"
           variant="primary"
           loading={isSubmitting}
           icon={<LogIn size={18} />}
-          style={{ width: '100%', marginTop: '0.75rem' }}
+          style={{ width: '100%', marginTop: '0.25rem' }}
         >
           Đăng nhập
         </Button>

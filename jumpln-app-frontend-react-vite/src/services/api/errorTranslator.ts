@@ -29,6 +29,14 @@ export function translateErrorMessage(error: any): string {
     case 'error.invalidactivationkey':
       return 'Liên kết kích hoạt không hợp lệ hoặc đã hết hạn. Vui lòng liên hệ Quản trị viên để nhận liên kết mới.';
 
+    case 'resetkeyinvalidorexpired':
+    case 'error.resetkeyinvalidorexpired':
+      return 'Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng gửi lại yêu cầu quên mật khẩu.';
+
+    case 'passwordlengthinvalid':
+    case 'error.passwordlengthinvalid':
+      return 'Độ dài mật khẩu không hợp lệ (từ 4 đến 100 ký tự).';
+
     case 'error.idnotfound':
     case 'idnotfound':
       return 'Không tìm thấy một số tài khoản được yêu cầu trong cơ sở dữ liệu.';

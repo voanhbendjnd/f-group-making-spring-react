@@ -14,3 +14,20 @@ export interface LoginResponse {
   accessToken: string;
   user: UserDetails;
 }
+
+export interface ResetPasswordInitRequest {
+  email: string;
+}
+
+export interface ResetPasswordFinishRequest {
+  resetKey: string;
+  newPassword: string;
+}
+
+export interface ResetKeyVerifyResult {
+  valid: boolean;
+  email: string;
+  name: string | null;
+}
+
+

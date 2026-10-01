@@ -10,6 +10,8 @@ import { useAuth } from '@/app/providers/AuthContext';
 
 // Pages
 import { LoginPage } from '@/pages/auth/LoginPage';
+import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage';
+import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage';
 import { ActivateAccountPage } from '@/pages/activation/ActivateAccountPage';
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
 import { StudentListPage } from '@/pages/admin/StudentListPage';
@@ -54,6 +56,22 @@ export const router = createBrowserRouter([
             <LoginPage />
           </PublicRoute>
         ),
+      },
+      {
+        path: '/forgot-password',
+        element: (
+          <PublicRoute>
+            <ForgotPasswordPage />
+          </PublicRoute>
+        ),
+      },
+      {
+        path: '/reset-password',
+        element: <ResetPasswordPage />,
+      },
+      {
+        path: '/account/reset/finish',
+        element: <ResetPasswordPage />,
       },
       // Both /activate and /account/activate supported for email links
       {
