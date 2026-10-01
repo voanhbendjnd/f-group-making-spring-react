@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, CheckCircle2, AlertCircle, Send } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
 import { studentApi } from '../api/studentApi';
@@ -18,6 +19,7 @@ export const SingleActivationModal: React.FC<SingleActivationModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { t } = useTranslation();
   const [isSending, setIsSending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export const SingleActivationModal: React.FC<SingleActivationModalProps> = ({
       setIsSuccess(true);
       onSuccess();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Không thể gửi email kích hoạt. Vui lòng thử lại sau.');
+      setErrorMsg(err.message || t('errors.generalFailure'));
     } finally {
       setIsSending(false);
     }
@@ -48,16 +50,16 @@ export const SingleActivationModal: React.FC<SingleActivationModalProps> = ({
     <Modal
       open={open}
       onClose={isSending ? () => {} : handleClose}
-      title={isSuccess ? 'Đã gửi email thành công' : 'Gửi email kích hoạt tài khoản'}
+      title={isSuccess ? t('modals.singleSuccessTitle') : t('modals.singleTitle')}
       footer={
         isSuccess ? (
           <Button variant="primary" onClick={handleClose}>
-            Đóng
+            {t('common.close')}
           </Button>
         ) : (
           <>
             <Button variant="secondary" onClick={handleClose} disabled={isSending}>
-              Hủy
+              {t('common.cancel')}
             </Button>
             <Button
               variant="primary"
@@ -65,7 +67,7 @@ export const SingleActivationModal: React.FC<SingleActivationModalProps> = ({
               loading={isSending}
               icon={<Send size={16} />}
             >
-              Gửi email kích hoạt
+              {t('modals.singleSubmit')}
             </Button>
           </>
         )
@@ -89,10 +91,14 @@ export const SingleActivationModal: React.FC<SingleActivationModalProps> = ({
             <CheckCircle2 size={28} />
           </div>
           <h4 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--color-text-main)', marginBottom: '0.25rem' }}>
-            Yêu cầu đã được tiếp nhận
+            {t('modals.singleSuccessTitle')}
           </h4>
           <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
-            Hệ thống đã gửi liên kết kích hoạt tài khoản đến địa chỉ <strong>{student.email}</strong>.
+            <Trans
+              i18nKey="modals.singleSuccessDesc"
+              values={{ email: student.email }}
+              components={{ strong: <strong /> }}
+            />
           </p>
         </div>
       ) : (
@@ -122,10 +128,10 @@ export const SingleActivationModal: React.FC<SingleActivationModalProps> = ({
             </div>
             <div>
               <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
-                Xác nhận gửi email cho sinh viên
+                {t('modals.singleTitle')}
               </h4>
               <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-                Hệ thống sẽ cấp mã kích hoạt mới và gửi thư đến email của sinh viên này.
+                {t('modals.singleStatusWarning')}
               </p>
             </div>
           </div>
@@ -142,21 +148,15 @@ export const SingleActivationModal: React.FC<SingleActivationModalProps> = ({
             }}
           >
             <div>
-              Họ và tên: <strong>{student.fullName}</strong>
+              {t('students.colFullName')}: <strong>{student.fullName}</strong>
             </div>
             <div>
-              Mã sinh viên: <strong>{student.rollNumber}</strong>
+              {t('students.colRollNumber')}: <strong>{student.rollNumber}</strong>
             </div>
             <div>
-              Email nhận thư: <strong>{student.email}</strong>
+              {t('students.colEmail')}: <strong>{student.email}</strong>
             </div>
           </div>
-
-          {student.hasActivationKey && !student.activated && (
-            <p style={{ fontSize: '0.8125rem', color: '#b45309' }}>
-              * Lưu ý: Sinh viên này đã từng được gửi mã kích hoạt trước đó. Gửi lại sẽ tạo một mã mới và vô hiệu hóa mã cũ.
-            </p>
-          )}
         </div>
       )}
     </Modal>

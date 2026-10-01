@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { CheckCircle2, AlertTriangle, KeyRound, ArrowRight, ShieldCheck, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { useTranslation, Trans } from 'react-i18next';
 import { activationApi } from '@/features/activation/api/activationApi';
 import type { ActivationKeyVerifyResult } from '@/features/activation/types';
 import { Button } from '@/components/common/Button';
@@ -9,6 +10,7 @@ import { Input } from '@/components/common/Input';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 export const ActivateAccountPage: React.FC = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -29,7 +31,7 @@ export const ActivateAccountPage: React.FC = () => {
   useEffect(() => {
     if (!key || !key.trim()) {
       setIsVerifying(false);
-      setVerifyError('Đường dẫn kích hoạt thiếu mã xác thực. Vui lòng kiểm tra lại liên kết trong email của bạn.');
+      setVerifyError(t('activation.missingKeyError'));
       return;
     }
 
@@ -45,8 +47,7 @@ export const ActivateAccountPage: React.FC = () => {
       .catch((err) => {
         if (isMounted) {
           setVerifyError(
-            err.message ||
-              'Liên kết kích hoạt không hợp lệ, đã hết hạn hoặc tài khoản đã được kích hoạt trước đó.'
+            err.message || t('activation.invalidKeyError')
           );
           setIsVerifying(false);
         }
@@ -55,7 +56,7 @@ export const ActivateAccountPage: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [key]);
+  }, [key, t]);
 
   // Validation rules
   const hasMinLength = password.length >= 4;
@@ -87,7 +88,7 @@ export const ActivateAccountPage: React.FC = () => {
         // Ignore confetti if not supported
       }
     } catch (err: any) {
-      setSubmitError(err.message || 'Không thể kích hoạt tài khoản. Vui lòng thử lại sau.');
+      setSubmitError(err.message || t('activation.submitErrorDefault'));
     } finally {
       setIsSubmitting(false);
     }
@@ -97,7 +98,7 @@ export const ActivateAccountPage: React.FC = () => {
   if (isVerifying) {
     return (
       <div className="card" style={{ padding: '2.5rem', textAlign: 'center' }}>
-        <LoadingSpinner message="Đang kiểm tra liên kết kích hoạt của bạn..." />
+        <LoadingSpinner message={t('activation.verifyingLink')} />
       </div>
     );
   }
@@ -123,7 +124,7 @@ export const ActivateAccountPage: React.FC = () => {
         </div>
 
         <h2 style={{ fontSize: '1.375rem', fontWeight: 700, color: 'var(--color-text-main)', marginBottom: '0.5rem' }}>
-          Liên kết không hợp lệ hoặc đã hết hạn
+          {t('activation.invalidKeyTitle')}
         </h2>
 
         <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9375rem', marginBottom: '1.75rem', lineHeight: 1.6 }}>
@@ -132,10 +133,10 @@ export const ActivateAccountPage: React.FC = () => {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <Button variant="primary" onClick={() => navigate('/login')}>
-            Đến trang Đăng nhập
+            {t('common.backToLogin')}
           </Button>
           <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-subtle)' }}>
-            Nếu bạn chưa kích hoạt được, vui lòng liên hệ Quản trị viên để được cấp liên kết mới.
+            {t('activation.contactAdmin')}
           </div>
         </div>
       </div>
@@ -163,12 +164,15 @@ export const ActivateAccountPage: React.FC = () => {
         </div>
 
         <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '0.5rem' }}>
-          Kích hoạt tài khoản thành công!
+          {t('activation.successTitle')}
         </h2>
 
         <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9375rem', marginBottom: '1.75rem', lineHeight: 1.6 }}>
-          Chúc mừng <strong style={{ color: 'var(--color-text-main)' }}>{verifyResult.name || verifyResult.email}</strong>!
-          Tài khoản sinh viên của bạn đã sẵn sàng. Bạn có thể đăng nhập ngay bằng mật khẩu vừa tạo.
+          <Trans
+            i18nKey="activation.successDesc"
+            values={{ name: verifyResult.name || verifyResult.email }}
+            components={{ strong: <strong style={{ color: 'var(--color-text-main)' }} /> }}
+          />
         </p>
 
         <Button
@@ -178,7 +182,7 @@ export const ActivateAccountPage: React.FC = () => {
           onClick={() => navigate('/login')}
           style={{ width: '100%' }}
         >
-          Đăng nhập ngay
+          {t('activation.loginNow')}
         </Button>
       </div>
     );
@@ -205,11 +209,14 @@ export const ActivateAccountPage: React.FC = () => {
         </div>
 
         <h2 style={{ fontSize: '1.375rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
-          Kích hoạt tài khoản
+          {t('activation.title')}
         </h2>
 
         <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
-          Xin chào <strong style={{ color: 'var(--color-text-main)' }}>{verifyResult.name || 'Sinh viên'}</strong> ({verifyResult.email})
+          {t('activation.welcome', {
+            name: verifyResult.name || t('common.student'),
+            email: verifyResult.email,
+          })}
         </p>
       </div>
 
@@ -222,9 +229,9 @@ export const ActivateAccountPage: React.FC = () => {
 
       <form onSubmit={handleActivate}>
         <Input
-          label="Tạo mật khẩu mới"
+          label={t('activation.createPasswordLabel')}
           type="password"
-          placeholder="Nhập mật khẩu mới của bạn"
+          placeholder={t('activation.createPasswordPlaceholder')}
           required
           autoFocus
           value={password}
@@ -232,9 +239,9 @@ export const ActivateAccountPage: React.FC = () => {
         />
 
         <Input
-          label="Xác nhận mật khẩu"
+          label={t('activation.confirmPasswordLabel')}
           type="password"
-          placeholder="Nhập lại mật khẩu vừa tạo"
+          placeholder={t('activation.confirmPasswordPlaceholder')}
           required
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
@@ -254,7 +261,7 @@ export const ActivateAccountPage: React.FC = () => {
           }}
         >
           <div style={{ fontWeight: 600, color: 'var(--color-text-main)', marginBottom: '2px' }}>
-            Yêu cầu mật khẩu:
+            {t('activation.requirementsTitle')}
           </div>
 
           <div
@@ -279,7 +286,7 @@ export const ActivateAccountPage: React.FC = () => {
             >
               {hasMinLength ? <Check size={12} /> : null}
             </div>
-            <span>Mật khẩu có ít nhất 4 ký tự</span>
+            <span>{t('activation.min4Chars')}</span>
           </div>
 
           <div
@@ -304,7 +311,7 @@ export const ActivateAccountPage: React.FC = () => {
             >
               {passwordsMatch ? <Check size={12} /> : null}
             </div>
-            <span>Mật khẩu xác nhận trùng khớp</span>
+            <span>{t('activation.passwordsMatch')}</span>
           </div>
         </div>
 
@@ -316,13 +323,13 @@ export const ActivateAccountPage: React.FC = () => {
           icon={<ShieldCheck size={18} />}
           style={{ width: '100%' }}
         >
-          Hoàn tất kích hoạt tài khoản
+          {t('activation.completeActivation')}
         </Button>
       </form>
 
       <div style={{ textAlign: 'center', marginTop: '1.25rem' }}>
         <Link to="/login" style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>
-          Đã có mật khẩu? Đăng nhập tại đây
+          {t('activation.hasPasswordLogin')}
         </Link>
       </div>
     </div>

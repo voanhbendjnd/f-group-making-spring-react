@@ -1,16 +1,18 @@
 import React from 'react';
 import { CheckCircle2, Users, Calendar } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/app/providers/AuthContext';
 import { PageHeader } from '@/components/common/PageHeader';
 
 export const StudentDashboardPage: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
 
   return (
     <div>
       <PageHeader
-        title={`Xin chào, ${user?.name || 'Sinh viên'}!`}
-        description="Chào mừng bạn đến với Cổng thông tin F-Group Making. Tài khoản của bạn đã sẵn sàng tham gia xếp nhóm môn học."
+        title={t('studentDashboard.greeting', { name: user?.name || user?.email || 'Student' })}
+        description={t('studentDashboard.welcome')}
       />
 
       {/* Account Status Card */}
@@ -44,10 +46,10 @@ export const StudentDashboardPage: React.FC = () => {
 
         <div>
           <div style={{ fontWeight: 700, fontSize: '1.125rem', color: '#166534' }}>
-            Tài khoản đã kích hoạt & Xác thực thành công
+            {t('studentDashboard.accountActive')}
           </div>
           <div style={{ fontSize: '0.875rem', color: '#15803d', marginTop: '2px' }}>
-            Email đăng ký: <strong>{user?.email}</strong> · Quyền hạn: Sinh viên (ROLE_STUDENT)
+            {t('studentDashboard.emailRegistered', { email: user?.email })}
           </div>
         </div>
       </div>
@@ -72,12 +74,11 @@ export const StudentDashboardPage: React.FC = () => {
             >
               <Users size={20} />
             </div>
-            <h3 style={{ fontSize: '1.125rem' }}>Tính năng Xếp nhóm F-Group</h3>
+            <h3 style={{ fontSize: '1.125rem' }}>{t('studentDashboard.featureTitle')}</h3>
           </div>
 
           <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
-            Hệ thống đang chuẩn bị mở cổng đăng ký và phân nhóm dự án cho các lớp chuyên ngành trong học kỳ này.
-            Bạn sẽ nhận được thông báo qua email ngay khi giảng viên phụ trách mở đợt xếp nhóm.
+            {t('studentDashboard.featureDesc')}
           </p>
         </div>
 
@@ -93,7 +94,7 @@ export const StudentDashboardPage: React.FC = () => {
             >
               <Calendar size={20} />
             </div>
-            <h3 style={{ fontSize: '1.125rem' }}>Lịch trình dự kiến</h3>
+            <h3 style={{ fontSize: '1.125rem' }}>{t('studentDashboard.timelineTitle')}</h3>
           </div>
 
           <ul
@@ -106,15 +107,9 @@ export const StudentDashboardPage: React.FC = () => {
               gap: '0.5rem',
             }}
           >
-            <li>
-              <strong>Tuần 1 - 2:</strong> Hoàn tất kích hoạt tài khoản sinh viên toàn khóa.
-            </li>
-            <li>
-              <strong>Tuần 3:</strong> Mở cổng đăng ký đề tài và ghép đội ngũ sinh viên.
-            </li>
-            <li>
-              <strong>Tuần 4:</strong> Giảng viên công bố danh sách nhóm chính thức.
-            </li>
+            <li>{t('studentDashboard.week12')}</li>
+            <li>{t('studentDashboard.week3')}</li>
+            <li>{t('studentDashboard.week4')}</li>
           </ul>
         </div>
       </div>

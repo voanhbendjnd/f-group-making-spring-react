@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, CheckCircle2, ShieldAlert, Send } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 import { authApi } from '@/features/auth/api/authApi';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 
 export const ForgotPasswordPage: React.FC = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -23,7 +25,7 @@ export const ForgotPasswordPage: React.FC = () => {
       setIsSubmitted(true);
     } catch (err: any) {
       setErrorMessage(
-        err.message || 'Không thể gửi yêu cầu đặt lại mật khẩu. Vui lòng kiểm tra lại email và thử lại.'
+        err.message || t('forgotPassword.errorDefault')
       );
     } finally {
       setIsSubmitting(false);
@@ -49,10 +51,10 @@ export const ForgotPasswordPage: React.FC = () => {
           <Mail size={24} />
         </div>
         <h2 style={{ fontSize: '1.375rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
-          Quên mật khẩu?
+          {t('forgotPassword.title')}
         </h2>
         <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
-          Nhập email đăng ký tài khoản của bạn để nhận liên kết đặt lại mật khẩu
+          {t('forgotPassword.subtitle')}
         </p>
       </div>
 
@@ -70,21 +72,25 @@ export const ForgotPasswordPage: React.FC = () => {
             <CheckCircle2 size={24} style={{ color: 'var(--color-success)', flexShrink: 0, marginTop: '2px' }} />
             <div className="alert-content">
               <strong style={{ display: 'block', marginBottom: '0.25rem', color: '#166534' }}>
-                Đã tiếp nhận yêu cầu!
+                {t('forgotPassword.receivedTitle')}
               </strong>
               <span style={{ fontSize: '0.875rem', color: '#15803d', lineHeight: 1.5 }}>
-                Nếu email <strong>{email}</strong> tồn tại trong hệ thống và đã được kích hoạt, một liên kết đặt lại mật khẩu sẽ được gửi đến hộp thư của bạn. Vui lòng kiểm tra hòm thư (kể cả mục Spam).
+                <Trans
+                  i18nKey="forgotPassword.receivedDesc"
+                  values={{ email }}
+                  components={{ strong: <strong /> }}
+                />
               </span>
             </div>
           </div>
 
           <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
-            Liên kết có hiệu lực trong vòng 24 giờ. Vì lý do bảo mật, mỗi yêu cầu gửi lại cách nhau tối thiểu 1 phút.
+            {t('forgotPassword.expirationNotice')}
           </p>
 
           <Link to="/login" style={{ textDecoration: 'none' }}>
             <Button variant="outline" icon={<ArrowLeft size={16} />} style={{ width: '100%' }}>
-              Quay lại Đăng nhập
+              {t('common.backToLogin')}
             </Button>
           </Link>
         </div>
@@ -98,9 +104,9 @@ export const ForgotPasswordPage: React.FC = () => {
           )}
 
           <Input
-            label="Địa chỉ Email"
+            label={t('common.email')}
             type="email"
-            placeholder="ví dụ: student@fpt.edu.vn"
+            placeholder={t('forgotPassword.emailPlaceholder')}
             required
             autoFocus
             value={email}
@@ -115,7 +121,7 @@ export const ForgotPasswordPage: React.FC = () => {
             icon={<Send size={18} />}
             style={{ width: '100%', marginTop: '0.75rem' }}
           >
-            Gửi liên kết đặt lại
+            {t('forgotPassword.sendLink')}
           </Button>
 
           <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
@@ -131,7 +137,7 @@ export const ForgotPasswordPage: React.FC = () => {
                 fontWeight: 500,
               }}
             >
-              <ArrowLeft size={16} /> Quay lại trang Đăng nhập
+              <ArrowLeft size={16} /> {t('forgotPassword.backToLogin')}
             </Link>
           </div>
         </form>

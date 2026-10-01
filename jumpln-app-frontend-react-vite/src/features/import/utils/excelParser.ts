@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import i18n from '@/locales/i18n';
 import type { ParsedStudentRow } from '../types';
 
 const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
@@ -17,7 +18,7 @@ export async function parseExcelClientSide(file: File): Promise<ParseExcelResult
 
   const firstSheetName = workbook.SheetNames[0];
   if (!firstSheetName) {
-    throw new Error('Tệp Excel không chứa trang tính (sheet) nào.');
+    throw new Error(i18n.t('import.clientErrors.noSheet'));
   }
 
   const worksheet = workbook.Sheets[firstSheetName];
@@ -51,22 +52,22 @@ export async function parseExcelClientSide(file: File): Promise<ParseExcelResult
     const errors: string[] = [];
 
     if (!rollNumber) {
-      errors.push('Thiếu Mã sinh viên (Cột B)');
+      errors.push(i18n.t('import.clientErrors.missingRollNumber'));
     } else if (seenRollNumbers.has(rollNumber.toLowerCase())) {
-      errors.push(`Mã sinh viên "${rollNumber}" bị trùng lặp trong tệp`);
+      errors.push(i18n.t('import.clientErrors.duplicateRollNumber', { rollNumber }));
     } else {
       seenRollNumbers.add(rollNumber.toLowerCase());
     }
 
     if (!fullName) {
-      errors.push('Thiếu Họ và tên (Cột C)');
+      errors.push(i18n.t('import.clientErrors.missingFullName'));
     } else if (fullName.length > 50) {
-      errors.push('Họ và tên dài hơn 50 ký tự');
+      errors.push(i18n.t('import.clientErrors.fullNameTooLong'));
     }
 
     let extractedMajorCode = '';
     if (!originalMajor) {
-      errors.push('Thiếu Mã ngành (Cột D)');
+      errors.push(i18n.t('import.clientErrors.missingMajor'));
     } else {
       const parts = originalMajor.split('_');
       if (parts.length >= 2) {
@@ -77,13 +78,13 @@ export async function parseExcelClientSide(file: File): Promise<ParseExcelResult
     }
 
     if (!memberCode) {
-      errors.push('Thiếu Mã thành viên (Cột E)');
+      errors.push(i18n.t('import.clientErrors.missingMemberCode'));
     }
 
     if (!email) {
-      errors.push('Thiếu Email (Cột F)');
+      errors.push(i18n.t('import.clientErrors.missingEmail'));
     } else if (!EMAIL_REGEX.test(email)) {
-      errors.push(`Định dạng email "${email}" không hợp lệ`);
+      errors.push(i18n.t('import.clientErrors.invalidEmail', { email }));
     }
 
     parsedRows.push({

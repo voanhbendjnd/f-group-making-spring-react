@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { Upload, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { studentApi } from '@/features/students/api/studentApi';
 import type { Student, StudentFilterParams } from '@/features/students/types';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -17,6 +18,7 @@ import { BatchActivationModal } from '@/features/students/components/BatchActiva
 import { SingleActivationModal } from '@/features/students/components/SingleActivationModal';
 
 export const StudentListPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -112,15 +114,15 @@ export const StudentListPage: React.FC = () => {
   return (
     <div>
       <PageHeader
-        title="Quản lý sinh viên"
-        description="Xem danh sách sinh viên, lọc hồ sơ, và gửi email kích hoạt tài khoản một cách dễ dàng."
+        title={t('students.title')}
+        description={t('students.description')}
         action={
           <Button
             variant="primary"
             icon={<Upload size={16} />}
             onClick={() => navigate('/admin/students/import')}
           >
-            Nhập sinh viên từ Excel
+            {t('students.importBtn')}
           </Button>
         }
       />
@@ -146,26 +148,26 @@ export const StudentListPage: React.FC = () => {
 
       {/* Content States */}
       {isLoading && !data ? (
-        <LoadingSpinner message="Đang tải danh sách sinh viên..." />
+        <LoadingSpinner message={t('students.loadingList')} />
       ) : isError ? (
         <ErrorState
-          title="Không thể tải danh sách sinh viên"
-          message={(error as any)?.message || 'Vui lòng kiểm tra lại kết nối đến máy chủ.'}
+          title={t('students.errorTitle')}
+          message={(error as any)?.message || t('students.errorDefault')}
           onRetry={() => refetch()}
         />
       ) : students.length === 0 ? (
         <EmptyState
-          title="Không có sinh viên nào"
+          title={t('students.emptyTitle')}
           description={
             filters.search || filters.majorCode || filters.activated !== undefined
-              ? 'Không có kết quả nào phù hợp với bộ lọc hiện tại của bạn. Thử xóa bớt bộ lọc để tìm lại.'
-              : 'Chưa có sinh viên nào trong hệ thống. Hãy bắt đầu bằng cách nhập danh sách từ tệp Excel.'
+              ? t('students.emptyFiltered')
+              : t('students.emptyNoData')
           }
           icon={<Users size={32} />}
           actionText={
             filters.search || filters.majorCode || filters.activated !== undefined
-              ? 'Xóa bộ lọc'
-              : 'Nhập sinh viên từ Excel'
+              ? t('students.clearFilters')
+              : t('students.importBtn')
           }
           onAction={
             filters.search || filters.majorCode || filters.activated !== undefined

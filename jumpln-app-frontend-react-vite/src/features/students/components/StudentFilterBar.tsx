@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, X, Filter, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { StudentFilterParams } from '../types';
 
 export interface StudentFilterBarProps {
@@ -15,6 +16,7 @@ export const StudentFilterBar: React.FC<StudentFilterBarProps> = ({
   onReset,
   isLoading = false,
 }) => {
+  const { t } = useTranslation();
   // Local state for smooth typing without lag or focus loss
   const [searchTerm, setSearchTerm] = useState(filters.search || '');
   const [majorCodeTerm, setMajorCodeTerm] = useState(filters.majorCode || '');
@@ -130,7 +132,7 @@ export const StudentFilterBar: React.FC<StudentFilterBarProps> = ({
         {/* Search input */}
         <div style={{ gridColumn: 'span 2', minWidth: '240px' }}>
           <label className="form-label" style={{ marginBottom: '0.375rem' }}>
-            Tìm kiếm sinh viên
+            {t('students.searchLabel')}
           </label>
           <div style={{ position: 'relative' }}>
             {isLoading ? (
@@ -162,7 +164,7 @@ export const StudentFilterBar: React.FC<StudentFilterBarProps> = ({
             <input
               type="text"
               className="form-control"
-              placeholder="Nhập mã SV, họ tên hoặc email..."
+              placeholder={t('students.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -189,7 +191,7 @@ export const StudentFilterBar: React.FC<StudentFilterBarProps> = ({
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
-                aria-label="Xóa từ khóa tìm kiếm"
+                aria-label={t('students.clearSearchAria')}
               >
                 <X size={16} />
               </button>
@@ -200,12 +202,12 @@ export const StudentFilterBar: React.FC<StudentFilterBarProps> = ({
         {/* Major Code filter */}
         <div>
           <label className="form-label" style={{ marginBottom: '0.375rem' }}>
-            Mã ngành
+            {t('students.majorLabel')}
           </label>
           <input
             type="text"
             className="form-control"
-            placeholder="Ví dụ: SE, IA, GD..."
+            placeholder={t('students.majorPlaceholder')}
             value={majorCodeTerm}
             onChange={(e) => setMajorCodeTerm(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -215,32 +217,32 @@ export const StudentFilterBar: React.FC<StudentFilterBarProps> = ({
         {/* Account status filter */}
         <div>
           <label className="form-label" style={{ marginBottom: '0.375rem' }}>
-            Trạng thái kích hoạt
+            {t('students.activationStatusLabel')}
           </label>
           <select
             className="form-control"
             value={currentStatusValue}
             onChange={handleStatusChange}
           >
-            <option value="all">Tất cả trạng thái</option>
-            <option value="activated">Đã kích hoạt</option>
-            <option value="unactivated">Chờ kích hoạt</option>
+            <option value="all">{t('students.allActivationStatus')}</option>
+            <option value="activated">{t('students.activated')}</option>
+            <option value="unactivated">{t('students.unactivated')}</option>
           </select>
         </div>
 
         {/* Key / Invitation status filter */}
         <div>
           <label className="form-label" style={{ marginBottom: '0.375rem' }}>
-            Trạng thái gửi email
+            {t('students.emailStatusLabel')}
           </label>
           <select
             className="form-control"
             value={currentKeyValue}
             onChange={handleKeyStatusChange}
           >
-            <option value="all">Tất cả</option>
-            <option value="sent">Đã gửi thư kích hoạt</option>
-            <option value="not_sent">Chưa gửi thư kích hoạt</option>
+            <option value="all">{t('students.allEmailStatus')}</option>
+            <option value="sent">{t('students.emailSent')}</option>
+            <option value="not_sent">{t('students.emailNotSent')}</option>
           </select>
         </div>
 
@@ -254,7 +256,7 @@ export const StudentFilterBar: React.FC<StudentFilterBarProps> = ({
               style={{ width: '100%', color: 'var(--color-text-muted)' }}
             >
               <Filter size={14} />
-              <span>Xóa bộ lọc</span>
+              <span>{t('students.clearFilters')}</span>
             </button>
           </div>
         )}

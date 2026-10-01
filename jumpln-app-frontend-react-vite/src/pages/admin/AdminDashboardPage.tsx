@@ -9,6 +9,7 @@ import {
   Upload,
   ArrowRight,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { studentApi } from '@/features/students/api/studentApi';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/common/Button';
@@ -16,6 +17,7 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 export const AdminDashboardPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   // Query 1: Total students
@@ -61,8 +63,8 @@ export const AdminDashboardPage: React.FC = () => {
   return (
     <div>
       <PageHeader
-        title="Tổng quan hệ thống"
-        description="Theo dõi tình trạng nhập dữ liệu sinh viên, số lượng tài khoản và trạng thái kích hoạt thư mời."
+        title={t('dashboard.title')}
+        description={t('dashboard.description')}
         action={
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <Button
@@ -70,14 +72,14 @@ export const AdminDashboardPage: React.FC = () => {
               icon={<Users size={16} />}
               onClick={() => navigate('/admin/students')}
             >
-              Danh sách sinh viên
+              {t('dashboard.studentListBtn')}
             </Button>
             <Button
               variant="primary"
               icon={<Upload size={16} />}
               onClick={() => navigate('/admin/students/import')}
             >
-              Nhập Excel mới
+              {t('dashboard.importExcelBtn')}
             </Button>
           </div>
         }
@@ -111,7 +113,7 @@ export const AdminDashboardPage: React.FC = () => {
           </div>
           <div>
             <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>
-              Tổng số sinh viên
+              {t('dashboard.statTotalStudents')}
             </div>
             <div style={{ fontSize: '1.875rem', fontWeight: 800, color: 'var(--color-text-main)', marginTop: '2px' }}>
               {isLoading ? '...' : totalStudents.toLocaleString()}
@@ -138,7 +140,7 @@ export const AdminDashboardPage: React.FC = () => {
           </div>
           <div>
             <div style={{ fontSize: '0.875rem', color: '#166534', fontWeight: 500 }}>
-              Đã kích hoạt thành công
+              {t('dashboard.statActivated')}
             </div>
             <div style={{ fontSize: '1.875rem', fontWeight: 800, color: 'var(--color-success)', marginTop: '2px' }}>
               {isLoading ? '...' : activatedStudents.toLocaleString()}
@@ -165,7 +167,7 @@ export const AdminDashboardPage: React.FC = () => {
           </div>
           <div>
             <div style={{ fontSize: '0.875rem', color: '#0369a1', fontWeight: 500 }}>
-              Đã gửi thư chờ kích hoạt
+              {t('dashboard.statEmailSent')}
             </div>
             <div style={{ fontSize: '1.875rem', fontWeight: 800, color: 'var(--color-info)', marginTop: '2px' }}>
               {isLoading ? '...' : emailSentStudents.toLocaleString()}
@@ -192,7 +194,7 @@ export const AdminDashboardPage: React.FC = () => {
           </div>
           <div>
             <div style={{ fontSize: '0.875rem', color: '#b45309', fontWeight: 500 }}>
-              Chờ gửi thư mời
+              {t('dashboard.statNotSent')}
             </div>
             <div style={{ fontSize: '1.875rem', fontWeight: 800, color: 'var(--color-warning)', marginTop: '2px' }}>
               {isLoading ? '...' : notSentStudents.toLocaleString()}
@@ -216,10 +218,10 @@ export const AdminDashboardPage: React.FC = () => {
               <div style={{ padding: '8px', borderRadius: 'var(--radius-md)', backgroundColor: '#eff6ff', color: 'var(--color-primary)' }}>
                 <Upload size={20} />
               </div>
-              <h3 style={{ fontSize: '1.125rem' }}>Nhập sinh viên từ tệp Excel</h3>
+              <h3 style={{ fontSize: '1.125rem' }}>{t('dashboard.cardImportTitle')}</h3>
             </div>
             <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
-              Tải danh sách sinh viên theo mẫu Excel .xlsx để tự động khởi tạo hồ sơ và cấp tài khoản chờ kích hoạt.
+              {t('dashboard.cardImportDesc')}
             </p>
           </div>
 
@@ -230,7 +232,7 @@ export const AdminDashboardPage: React.FC = () => {
               icon={<ArrowRight size={16} />}
               onClick={() => navigate('/admin/students/import')}
             >
-              Bắt đầu nhập tệp
+              {t('dashboard.cardImportAction')}
             </Button>
           </div>
         </div>
@@ -241,10 +243,10 @@ export const AdminDashboardPage: React.FC = () => {
               <div style={{ padding: '8px', borderRadius: 'var(--radius-md)', backgroundColor: '#f0fdf4', color: 'var(--color-success)' }}>
                 <Mail size={20} />
               </div>
-              <h3 style={{ fontSize: '1.125rem' }}>Gửi thư kích hoạt tài khoản</h3>
+              <h3 style={{ fontSize: '1.125rem' }}>{t('dashboard.cardActivateTitle')}</h3>
             </div>
             <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
-              Lọc theo ngành, tìm kiếm sinh viên chưa kích hoạt và gửi email chứa liên kết thiết lập mật khẩu chỉ với một cú nhấp chuột.
+              {t('dashboard.cardActivateDesc')}
             </p>
           </div>
 
@@ -255,7 +257,7 @@ export const AdminDashboardPage: React.FC = () => {
               icon={<ArrowRight size={16} />}
               onClick={() => navigate('/admin/students')}
             >
-              Đến danh sách gửi thư
+              {t('dashboard.cardActivateAction')}
             </Button>
           </div>
         </div>
@@ -265,8 +267,8 @@ export const AdminDashboardPage: React.FC = () => {
       <div className="card">
         <div className="card-header">
           <div>
-            <h3 className="card-title">Sinh viên mới cập nhật gần đây</h3>
-            <p className="card-subtitle">5 hồ sơ sinh viên gần nhất trong cơ sở dữ liệu</p>
+            <h3 className="card-title">{t('dashboard.recentTitle')}</h3>
+            <p className="card-subtitle">{t('dashboard.recentDesc')}</p>
           </div>
 
           <Button
@@ -275,26 +277,26 @@ export const AdminDashboardPage: React.FC = () => {
             icon={<ArrowRight size={16} />}
             onClick={() => navigate('/admin/students')}
           >
-            Xem tất cả
+            {t('dashboard.viewAll')}
           </Button>
         </div>
 
         {isLoading ? (
-          <LoadingSpinner message="Đang tải dữ liệu gần đây..." />
+          <LoadingSpinner message={t('common.loading')} />
         ) : recentStudents.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)' }}>
-            Chưa có sinh viên nào. Hãy bấm "Nhập Excel mới" để bắt đầu.
+            {t('dashboard.emptyRecent')}
           </div>
         ) : (
           <div className="table-container" style={{ border: 'none', boxShadow: 'none' }}>
             <table className="table">
               <thead>
                 <tr>
-                  <th>Mã sinh viên</th>
-                  <th>Họ và tên</th>
-                  <th>Email</th>
-                  <th>Ngành</th>
-                  <th>Trạng thái</th>
+                  <th>{t('students.colRollNumber')}</th>
+                  <th>{t('students.colFullName')}</th>
+                  <th>{t('students.colEmail')}</th>
+                  <th>{t('students.colMajor')}</th>
+                  <th>{t('students.colAccountStatus')}</th>
                 </tr>
               </thead>
               <tbody>

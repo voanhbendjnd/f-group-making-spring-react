@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { KeyRound, CheckCircle2, ShieldAlert, ArrowRight, ShieldCheck, Check, RotateCcw } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { useTranslation } from 'react-i18next';
 import { authApi } from '@/features/auth/api/authApi';
 import type { ResetKeyVerifyResult } from '@/features/auth/types';
 import { Button } from '@/components/common/Button';
@@ -9,6 +10,7 @@ import { Input } from '@/components/common/Input';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 export const ResetPasswordPage: React.FC = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const resetKey = searchParams.get('key') || searchParams.get('token');
 
@@ -26,7 +28,7 @@ export const ResetPasswordPage: React.FC = () => {
   useEffect(() => {
     if (!resetKey || !resetKey.trim()) {
       setIsVerifying(false);
-      setVerifyError('Đường dẫn không chứa mã xác thực. Vui lòng kiểm tra lại liên kết trong email của bạn.');
+      setVerifyError(t('resetPassword.missingKeyError'));
       return;
     }
 
@@ -42,7 +44,7 @@ export const ResetPasswordPage: React.FC = () => {
       .catch((err) => {
         if (isMounted) {
           setVerifyError(
-            err.message || 'Liên kết đặt lại mật khẩu không hợp lệ, đã hết hạn hoặc đã được sử dụng trước đó.'
+            err.message || t('resetPassword.invalidOrExpiredKey')
           );
           setIsVerifying(false);
         }
@@ -51,7 +53,7 @@ export const ResetPasswordPage: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [resetKey]);
+  }, [resetKey, t]);
 
   const hasMinLength = password.length >= 4;
   const passwordsMatch = password.length > 0 && password === confirmPassword;
@@ -82,7 +84,7 @@ export const ResetPasswordPage: React.FC = () => {
       }
     } catch (err: any) {
       setErrorMessage(
-        err.message || 'Mã xác thực không hợp lệ hoặc đã hết hạn. Vui lòng gửi lại yêu cầu đặt lại mật khẩu.'
+        err.message || t('resetPassword.submitErrorDefault')
       );
     } finally {
       setIsSubmitting(false);
@@ -93,7 +95,7 @@ export const ResetPasswordPage: React.FC = () => {
   if (isVerifying) {
     return (
       <div className="card" style={{ padding: '2.5rem 2rem', textAlign: 'center' }}>
-        <LoadingSpinner message="Đang kiểm tra tính hợp lệ của liên kết..." />
+        <LoadingSpinner message={t('resetPassword.checkingLink')} />
       </div>
     );
   }
@@ -118,14 +120,14 @@ export const ResetPasswordPage: React.FC = () => {
           <ShieldAlert size={28} />
         </div>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
-          Liên kết không hợp lệ hoặc đã hết hạn
+          {t('resetPassword.invalidKeyTitle')}
         </h2>
         <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginTop: '0.5rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-          {verifyError || 'Đường dẫn đặt lại mật khẩu này đã được sử dụng trước đó hoặc đã quá thời hạn 24 giờ.'}
+          {verifyError || t('resetPassword.invalidKeyDefaultDesc')}
         </p>
         <Link to="/forgot-password" style={{ textDecoration: 'none' }}>
           <Button variant="primary" icon={<RotateCcw size={16} />} style={{ width: '100%' }}>
-            Gửi lại yêu cầu đặt lại mật khẩu
+            {t('resetPassword.resendRequest')}
           </Button>
         </Link>
       </div>
@@ -152,14 +154,14 @@ export const ResetPasswordPage: React.FC = () => {
           <CheckCircle2 size={36} />
         </div>
         <h2 style={{ fontSize: '1.375rem', fontWeight: 700, color: '#166534' }}>
-          Đặt lại mật khẩu thành công!
+          {t('resetPassword.successTitle')}
         </h2>
         <p style={{ fontSize: '0.9375rem', color: 'var(--color-text-muted)', marginTop: '0.5rem', marginBottom: '1.75rem', lineHeight: 1.5 }}>
-          Mật khẩu mới đã được cập nhật thành công. Mọi phiên đăng nhập cũ trên các thiết bị khác đã được tự động đăng xuất.
+          {t('resetPassword.successDesc')}
         </p>
         <Link to="/login" style={{ textDecoration: 'none' }}>
           <Button variant="primary" icon={<ArrowRight size={18} />} style={{ width: '100%' }}>
-            Đăng nhập ngay
+            {t('resetPassword.loginNow')}
           </Button>
         </Link>
       </div>
@@ -186,15 +188,15 @@ export const ResetPasswordPage: React.FC = () => {
           <KeyRound size={24} />
         </div>
         <h2 style={{ fontSize: '1.375rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
-          Đặt lại mật khẩu mới
+          {t('resetPassword.title')}
         </h2>
         <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
           {verifyResult?.email ? (
             <>
-              Thiết lập mật khẩu mới cho tài khoản <strong>{verifyResult.email}</strong>
+              {t('resetPassword.formSubtitleWithEmail', { email: verifyResult.email })}
             </>
           ) : (
-            'Vui lòng nhập mật khẩu mới để bảo vệ tài khoản của bạn'
+            t('resetPassword.formSubtitle')
           )}
         </p>
       </div>
@@ -208,7 +210,7 @@ export const ResetPasswordPage: React.FC = () => {
 
       <form onSubmit={handleSubmit} noValidate>
         <Input
-          label="Mật khẩu mới"
+          label={t('resetPassword.newPasswordLabel')}
           type="password"
           placeholder="••••••••"
           required
@@ -218,7 +220,7 @@ export const ResetPasswordPage: React.FC = () => {
         />
 
         <Input
-          label="Xác nhận mật khẩu mới"
+          label={t('resetPassword.confirmPasswordLabel')}
           type="password"
           placeholder="••••••••"
           required
@@ -248,7 +250,7 @@ export const ResetPasswordPage: React.FC = () => {
             }}
           >
             {hasMinLength ? <Check size={14} /> : <div style={{ width: 14 }} />}
-            <span>Độ dài tối thiểu 4 ký tự</span>
+            <span>{t('resetPassword.min4Chars')}</span>
           </div>
           <div
             style={{
@@ -259,7 +261,7 @@ export const ResetPasswordPage: React.FC = () => {
             }}
           >
             {passwordsMatch ? <Check size={14} /> : <div style={{ width: 14 }} />}
-            <span>Mật khẩu xác nhận trùng khớp</span>
+            <span>{t('resetPassword.passwordsMatch')}</span>
           </div>
         </div>
 
@@ -271,7 +273,7 @@ export const ResetPasswordPage: React.FC = () => {
           icon={<ShieldCheck size={18} />}
           style={{ width: '100%' }}
         >
-          Lưu mật khẩu mới
+          {t('resetPassword.saveNewPassword')}
         </Button>
       </form>
     </div>

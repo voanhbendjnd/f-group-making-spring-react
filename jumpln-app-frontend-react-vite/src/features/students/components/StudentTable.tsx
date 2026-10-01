@@ -1,5 +1,6 @@
 import React from 'react';
 import { Mail, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { Button } from '@/components/common/Button';
 import type { Student } from '../types';
@@ -21,6 +22,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({
   onSendSingle,
   isLoading,
 }) => {
+  const { t } = useTranslation();
   const isAllPageSelected =
     students.length > 0 && students.every((s) => selectedUserIds.includes(s.userId));
   const isSomePageSelected =
@@ -28,7 +30,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({
 
   return (
     <div className="table-container">
-      <table className="table" aria-label="Danh sách sinh viên">
+      <table className="table" aria-label={t('students.title')}>
         <thead>
           <tr>
             <th style={{ width: '48px', textAlign: 'center' }}>
@@ -41,17 +43,17 @@ export const StudentTable: React.FC<StudentTableProps> = ({
                   }}
                   onChange={onToggleSelectAllPage}
                   disabled={isLoading || students.length === 0}
-                  aria-label="Chọn tất cả sinh viên trên trang này"
+                  aria-label={t('students.selectAllPageAria')}
                 />
               </label>
             </th>
-            <th>Mã sinh viên</th>
-            <th>Họ và tên</th>
-            <th>Email</th>
-            <th>Ngành</th>
-            <th>Mã thành viên</th>
-            <th>Trạng thái tài khoản</th>
-            <th style={{ textAlign: 'right', paddingRight: '1.25rem' }}>Thao tác</th>
+            <th>{t('students.colRollNumber')}</th>
+            <th>{t('students.colFullName')}</th>
+            <th>{t('students.colEmail')}</th>
+            <th>{t('students.colMajor')}</th>
+            <th>{t('students.colMemberCode')}</th>
+            <th>{t('students.colAccountStatus')}</th>
+            <th style={{ textAlign: 'right', paddingRight: '1.25rem' }}>{t('students.colActions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -66,7 +68,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => onToggleSelect(student.userId)}
-                      aria-label={`Chọn sinh viên ${student.fullName}`}
+                      aria-label={t('students.selectStudentAria', { name: student.fullName })}
                     />
                   </label>
                 </td>
@@ -105,7 +107,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({
                   />
                 </td>
 
-                <td style={{ textAlign: 'right', paddingRight: '1.25rem' }}>
+                <td style={{ textAlign: 'right', paddingRight: '1rem' }}>
                   {student.activated ? (
                     <span
                       style={{
@@ -113,13 +115,13 @@ export const StudentTable: React.FC<StudentTableProps> = ({
                         alignItems: 'center',
                         gap: '0.25rem',
                         fontSize: '0.8125rem',
-                        color: 'var(--color-text-subtle)',
+                        color: 'var(--color-success)',
                         fontWeight: 500,
+                        padding: '0.375rem 0.5rem',
                       }}
-                      title="Tài khoản đã kích hoạt — không cần gửi lại thư mời"
                     >
-                      <CheckCircle2 size={14} style={{ color: 'var(--color-success)' }} />
-                      Đã kích hoạt
+                      <CheckCircle2 size={15} />
+                      <span>{t('students.statusActive')}</span>
                     </span>
                   ) : (
                     <Button
@@ -128,7 +130,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({
                       icon={<Mail size={14} />}
                       onClick={() => onSendSingle(student)}
                     >
-                      {student.hasActivationKey ? 'Gửi lại thư' : 'Gửi kích hoạt'}
+                      {student.hasActivationKey ? t('students.btnResend') : t('students.btnSend')}
                     </Button>
                   )}
                 </td>

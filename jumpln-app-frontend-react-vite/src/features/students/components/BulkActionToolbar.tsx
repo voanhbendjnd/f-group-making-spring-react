@@ -1,5 +1,6 @@
 import React from 'react';
 import { Mail, CheckSquare, X, AlertCircle } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 import { Button } from '@/components/common/Button';
 
 export interface BulkActionToolbarProps {
@@ -21,9 +22,15 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
   onClearSelection,
   onOpenBatchModal,
 }) => {
+  const { t } = useTranslation();
+
   if (selectedCount === 0 && !isAllMatchingSelected) {
     return null;
   }
+
+  const sendTargetLabel = isAllMatchingSelected
+    ? `(${totalFilteredCount})`
+    : `(${eligibleCount})`;
 
   return (
     <div
@@ -46,11 +53,19 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
           <CheckSquare size={18} />
           {isAllMatchingSelected ? (
             <span>
-              Đã chọn toàn bộ <strong>{totalFilteredCount}</strong> sinh viên phù hợp với bộ lọc.
+              <Trans
+                i18nKey="bulkAction.allMatchingSelected"
+                values={{ total: totalFilteredCount }}
+                components={{ strong: <strong /> }}
+              />
             </span>
           ) : (
             <span>
-              Đã chọn <strong>{selectedCount}</strong> sinh viên trên trang này.
+              <Trans
+                i18nKey="bulkAction.pageSelected"
+                values={{ count: selectedCount }}
+                components={{ strong: <strong /> }}
+              />
             </span>
           )}
         </div>
@@ -70,7 +85,7 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
               padding: '0 4px',
             }}
           >
-            Chọn toàn bộ {totalFilteredCount} sinh viên theo bộ lọc hiện tại
+            {t('bulkAction.selectAllMatching', { total: totalFilteredCount })}
           </button>
         )}
 
@@ -85,7 +100,7 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
             }}
           >
             <AlertCircle size={14} />
-            ({selectedCount - eligibleCount} sinh viên đã kích hoạt sẽ tự động được bỏ qua)
+            {t('bulkAction.activeSkipped', { count: selectedCount - eligibleCount })}
           </span>
         )}
       </div>
@@ -98,11 +113,11 @@ export const BulkActionToolbar: React.FC<BulkActionToolbarProps> = ({
           onClick={onOpenBatchModal}
           disabled={!isAllMatchingSelected && eligibleCount === 0}
         >
-          Gửi email kích hoạt {isAllMatchingSelected ? `cho ${totalFilteredCount} SV` : `(${eligibleCount})`}
+          {t('bulkAction.sendButton', { target: sendTargetLabel })}
         </Button>
 
         <Button variant="ghost" size="sm" icon={<X size={14} />} onClick={onClearSelection}>
-          Bỏ chọn
+          {t('bulkAction.clearSelection')}
         </Button>
       </div>
     </div>

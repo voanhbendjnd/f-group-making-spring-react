@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { LogIn, Info, ShieldAlert } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/app/providers/AuthContext';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
@@ -11,6 +12,7 @@ export const LoginForm: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const [formError, setFormError] = useState<string | null>(null);
 
   const {
@@ -43,7 +45,7 @@ export const LoginForm: React.FC = () => {
         }
       }
     } catch (err: any) {
-      setFormError(err.message || 'Đăng nhập không thành công. Vui lòng kiểm tra lại email và mật khẩu.');
+      setFormError(err.message || t('auth.loginFailed'));
     }
   };
 
@@ -51,10 +53,10 @@ export const LoginForm: React.FC = () => {
     <div className="card" style={{ padding: '2rem' }}>
       <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
         <h2 style={{ fontSize: '1.375rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
-          Đăng nhập hệ thống
+          {t('auth.loginTitle')}
         </h2>
         <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
-          Nhập thông tin tài khoản được cấp để tiếp tục
+          {t('auth.loginSubtitle')}
         </p>
       </div>
 
@@ -67,34 +69,34 @@ export const LoginForm: React.FC = () => {
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Input
-          label="Địa chỉ Email"
+          label={t('common.email')}
           type="email"
-          placeholder="ví dụ: an@fpt.edu.vn hoặc admin@djnd.tech"
+          placeholder={t('auth.emailPlaceholder')}
           required
           autoComplete="username"
           autoFocus
           error={errors.username?.message}
           {...register('username', {
-            required: 'Vui lòng nhập địa chỉ email của bạn',
+            required: t('auth.emailRequired'),
             pattern: {
               value: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/,
-              message: 'Địa chỉ email không đúng định dạng',
+              message: t('auth.emailInvalid'),
             },
           })}
         />
 
         <Input
-          label="Mật khẩu"
+          label={t('common.password')}
           type="password"
-          placeholder="••••••••"
+          placeholder={t('auth.passwordPlaceholder')}
           required
           autoComplete="current-password"
           error={errors.password?.message}
           {...register('password', {
-            required: 'Vui lòng nhập mật khẩu',
+            required: t('auth.passwordRequired'),
             minLength: {
               value: 4,
-              message: 'Mật khẩu tối thiểu 4 ký tự',
+              message: t('auth.passwordMinLength'),
             },
           })}
         />
@@ -109,7 +111,7 @@ export const LoginForm: React.FC = () => {
               fontWeight: 500,
             }}
           >
-            Quên mật khẩu?
+            {t('auth.forgotPasswordLink')}
           </Link>
         </div>
 
@@ -120,7 +122,7 @@ export const LoginForm: React.FC = () => {
           icon={<LogIn size={18} />}
           style={{ width: '100%', marginTop: '0.25rem' }}
         >
-          Đăng nhập
+          {t('auth.loginButton')}
         </Button>
       </form>
 
@@ -142,9 +144,9 @@ export const LoginForm: React.FC = () => {
       >
         <Info size={16} style={{ color: 'var(--color-primary)', flexShrink: 0, marginTop: '2px' }} />
         <div>
-          <strong style={{ color: 'var(--color-text-main)' }}>Chưa có tài khoản?</strong>
+          <strong style={{ color: 'var(--color-text-main)' }}>{t('auth.noAccountTitle')}</strong>
           <br />
-          Tài khoản sinh viên do Quản trị viên cấp qua thư kích hoạt. Hệ thống không cho phép tự đăng ký tài khoản. Vui lòng kiểm tra hộp thư email hoặc liên hệ nhà trường.
+          {t('auth.noAccountDesc')}
         </div>
       </div>
     </div>

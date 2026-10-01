@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, RotateCcw, Users, Mail } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/common/Button';
 
 export interface ImportSuccessSummaryProps {
@@ -12,6 +13,7 @@ export const ImportSuccessSummary: React.FC<ImportSuccessSummaryProps> = ({
   totalImported,
   onReset,
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   return (
@@ -45,12 +47,11 @@ export const ImportSuccessSummary: React.FC<ImportSuccessSummaryProps> = ({
       </div>
 
       <h2 style={{ fontSize: '1.625rem', fontWeight: 800, color: 'var(--color-text-main)', marginBottom: '0.5rem' }}>
-        Nhập thành công {totalImported} sinh viên!
+        {t('import.successTitle', { total: totalImported })}
       </h2>
 
       <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9375rem', lineHeight: 1.6, marginBottom: '1.75rem' }}>
-        Hệ thống đã tạo hồ sơ sinh viên và tài khoản người dùng tương ứng với quyền sinh viên (ROLE_STUDENT).
-        Các tài khoản hiện đang ở trạng thái <strong>Chờ kích hoạt</strong>.
+        {t('import.successDesc')}
       </p>
 
       {/* Workflow next step guide */}
@@ -67,10 +68,10 @@ export const ImportSuccessSummary: React.FC<ImportSuccessSummaryProps> = ({
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, color: '#1e40af', marginBottom: '0.375rem' }}>
           <Mail size={18} />
-          <span>Bước tiếp theo cần thực hiện</span>
+          <span>{t('import.nextStepTitle')}</span>
         </div>
         <div style={{ fontSize: '0.875rem', color: '#1e3a8a', lineHeight: 1.5 }}>
-          Chuyển sang màn hình <strong>Danh sách sinh viên</strong>, chọn sinh viên hoặc chọn toàn bộ theo bộ lọc rồi bấm <strong>"Gửi email kích hoạt"</strong> để các bạn có thể tự thiết lập mật khẩu và đăng nhập.
+          {t('import.nextStepDesc')}
         </div>
       </div>
 
@@ -80,7 +81,7 @@ export const ImportSuccessSummary: React.FC<ImportSuccessSummaryProps> = ({
           icon={<RotateCcw size={16} />}
           onClick={onReset}
         >
-          Nhập thêm tệp khác
+          {t('import.importAnother')}
         </Button>
 
         <Button
@@ -88,7 +89,7 @@ export const ImportSuccessSummary: React.FC<ImportSuccessSummaryProps> = ({
           icon={<Users size={16} />}
           onClick={() => navigate('/admin/students')}
         >
-          Xem danh sách sinh viên & Gửi email
+          {t('import.goToStudents')}
         </Button>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { ParsedStudentRow } from '../types';
 
 export interface ImportPreviewTableProps {
@@ -13,6 +14,7 @@ export const ImportPreviewTable: React.FC<ImportPreviewTableProps> = ({
   validCount,
   invalidCount,
 }) => {
+  const { t } = useTranslation();
   const [filterType, setFilterType] = useState<'all' | 'valid' | 'invalid'>('all');
   const [previewLimit, setPreviewLimit] = useState<number>(10);
 
@@ -36,7 +38,7 @@ export const ImportPreviewTable: React.FC<ImportPreviewTableProps> = ({
         }}
       >
         <div className="card" style={{ padding: '1rem 1.25rem' }}>
-          <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-subtle)' }}>Tổng số dòng dữ liệu</div>
+          <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-subtle)' }}>{t('import.totalRows')}</div>
           <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text-main)' }}>
             {rows.length}
           </div>
@@ -50,7 +52,7 @@ export const ImportPreviewTable: React.FC<ImportPreviewTableProps> = ({
             borderColor: '#bbf7d0',
           }}
         >
-          <div style={{ fontSize: '0.8125rem', color: '#166534' }}>Dòng hợp lệ sẵn sàng nhập</div>
+          <div style={{ fontSize: '0.8125rem', color: '#166534' }}>{t('import.validRows')}</div>
           <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-success)' }}>
             {validCount}
           </div>
@@ -65,7 +67,7 @@ export const ImportPreviewTable: React.FC<ImportPreviewTableProps> = ({
           }}
         >
           <div style={{ fontSize: '0.8125rem', color: invalidCount > 0 ? 'var(--color-error)' : 'var(--color-text-subtle)' }}>
-            Dòng phát hiện lỗi
+            {t('import.invalidRows')}
           </div>
           <div
             style={{
@@ -90,7 +92,7 @@ export const ImportPreviewTable: React.FC<ImportPreviewTableProps> = ({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
-          <span style={{ fontWeight: 600, color: 'var(--color-text-main)' }}>Xem trước dữ liệu:</span>
+          <span style={{ fontWeight: 600, color: 'var(--color-text-main)' }}>{t('import.step2Title')}:</span>
           <div style={{ display: 'flex', gap: '0.25rem' }}>
             <button
               type="button"
@@ -98,7 +100,7 @@ export const ImportPreviewTable: React.FC<ImportPreviewTableProps> = ({
               className={`btn btn-sm ${filterType === 'all' ? 'btn-secondary' : 'btn-ghost'}`}
               style={{ fontWeight: filterType === 'all' ? 700 : 500 }}
             >
-              Tất cả ({rows.length})
+              {t('import.filterAll')} ({rows.length})
             </button>
             <button
               type="button"
@@ -106,7 +108,7 @@ export const ImportPreviewTable: React.FC<ImportPreviewTableProps> = ({
               className={`btn btn-sm ${filterType === 'valid' ? 'btn-secondary' : 'btn-ghost'}`}
               style={{ fontWeight: filterType === 'valid' ? 700 : 500 }}
             >
-              Hợp lệ ({validCount})
+              {t('import.filterValid')} ({validCount})
             </button>
             {invalidCount > 0 && (
               <button
@@ -115,14 +117,14 @@ export const ImportPreviewTable: React.FC<ImportPreviewTableProps> = ({
                 className={`btn btn-sm ${filterType === 'invalid' ? 'btn-danger' : 'btn-ghost'}`}
                 style={{ fontWeight: filterType === 'invalid' ? 700 : 500 }}
               >
-                Có lỗi ({invalidCount})
+                {t('import.filterInvalid')} ({invalidCount})
               </button>
             )}
           </div>
         </div>
 
         <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>
-          Đang hiển thị {displayedRows.length} / {filteredRows.length} dòng
+          {displayedRows.length} / {filteredRows.length}
         </div>
       </div>
 
@@ -131,13 +133,13 @@ export const ImportPreviewTable: React.FC<ImportPreviewTableProps> = ({
         <table className="table">
           <thead>
             <tr>
-              <th style={{ width: '70px' }}>Dòng</th>
-              <th>Mã sinh viên</th>
-              <th>Họ và tên</th>
-              <th>Ngành</th>
-              <th>Mã thành viên</th>
-              <th>Email</th>
-              <th>Kiểm tra</th>
+              <th style={{ width: '70px' }}>#</th>
+              <th>{t('students.colRollNumber')}</th>
+              <th>{t('students.colFullName')}</th>
+              <th>{t('students.colMajor')}</th>
+              <th>{t('students.colMemberCode')}</th>
+              <th>{t('students.colEmail')}</th>
+              <th>{t('common.status')}</th>
             </tr>
           </thead>
           <tbody>
@@ -170,15 +172,15 @@ export const ImportPreviewTable: React.FC<ImportPreviewTableProps> = ({
                 <td>
                   {row.isValid ? (
                     <span className="badge badge-success">
-                      <CheckCircle2 size={12} /> Hợp lệ
+                      <CheckCircle2 size={12} /> {t('import.filterValid')}
                     </span>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                       <span className="badge badge-error">
-                        <AlertTriangle size={12} /> Phát hiện lỗi
+                        <AlertTriangle size={12} /> {t('import.filterInvalid')}
                       </span>
                       <span style={{ fontSize: '0.75rem', color: 'var(--color-error)' }}>
-                        {row.validationErrors.join(', ')}
+                        {row.validationErrors.join('; ')}
                       </span>
                     </div>
                   )}
@@ -189,15 +191,27 @@ export const ImportPreviewTable: React.FC<ImportPreviewTableProps> = ({
         </table>
       </div>
 
-      {hasMore && (
-        <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            onClick={() => setPreviewLimit((prev) => prev + 20)}
-          >
-            Hiển thị thêm 20 dòng tiếp theo...
-          </button>
+      {/* Show more/less controls */}
+      {filteredRows.length > 10 && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.5rem' }}>
+          {hasMore ? (
+            <button
+              type="button"
+              onClick={() => setPreviewLimit((prev) => prev + 25)}
+              className="btn btn-outline btn-sm"
+            >
+              {t('import.showMore', { count: filteredRows.length - previewLimit })}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setPreviewLimit(10)}
+              className="btn btn-ghost btn-sm"
+              style={{ color: 'var(--color-text-muted)' }}
+            >
+              {t('import.collapse')}
+            </button>
+          )}
         </div>
       )}
     </div>

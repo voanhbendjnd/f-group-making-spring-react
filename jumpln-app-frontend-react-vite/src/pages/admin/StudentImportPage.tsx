@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, Send, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import confetti from 'canvas-confetti';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/common/Button';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -14,6 +15,7 @@ import { importApi } from '@/features/import/api/importApi';
 import type { ImportResult } from '@/features/import/types';
 
 export const StudentImportPage: React.FC = () => {
+  const { t } = useTranslation();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isParsingClient, setIsParsingClient] = useState<boolean>(false);
   const [clientParseResult, setClientParseResult] = useState<ParseExcelResult | null>(null);
@@ -32,7 +34,7 @@ export const StudentImportPage: React.FC = () => {
       const result = await parseExcelClientSide(file);
       setClientParseResult(result);
     } catch (err: any) {
-      setGenericError(err.message || 'Không thể đọc tệp Excel đã chọn.');
+      setGenericError(err.message || t('import.errorOccurred'));
       setClientParseResult(null);
     } finally {
       setIsParsingClient(false);
@@ -64,7 +66,7 @@ export const StudentImportPage: React.FC = () => {
         }
       }
     } catch (err: any) {
-      setGenericError(err.message || 'Quá trình nhập dữ liệu gặp sự cố. Vui lòng kiểm tra lại tệp và thử lại.');
+      setGenericError(err.message || t('import.errorOccurred'));
     } finally {
       setIsSubmitting(false);
     }
@@ -75,11 +77,11 @@ export const StudentImportPage: React.FC = () => {
     return (
       <div>
         <PageHeader
-          title="Kết quả nhập sinh viên"
+          title={t('import.resultTitle')}
           breadcrumbs={[
-            { label: 'Quản trị', href: '/admin/dashboard' },
-            { label: 'Danh sách sinh viên', href: '/admin/students' },
-            { label: 'Nhập từ Excel' },
+            { label: t('breadcrumbs.admin'), href: '/admin/dashboard' },
+            { label: t('breadcrumbs.students'), href: '/admin/students' },
+            { label: t('breadcrumbs.import') },
           ]}
         />
         <ImportSuccessSummary
@@ -93,17 +95,17 @@ export const StudentImportPage: React.FC = () => {
   return (
     <div>
       <PageHeader
-        title="Nhập sinh viên từ Excel"
-        description="Tải lên tệp Excel danh sách sinh viên để tạo hồ sơ và tài khoản chờ kích hoạt trong hệ thống."
+        title={t('import.pageTitle')}
+        description={t('import.pageDesc')}
         breadcrumbs={[
-          { label: 'Quản trị', href: '/admin/dashboard' },
-          { label: 'Danh sách sinh viên', href: '/admin/students' },
-          { label: 'Nhập từ Excel' },
+          { label: t('breadcrumbs.admin'), href: '/admin/dashboard' },
+          { label: t('breadcrumbs.students'), href: '/admin/students' },
+          { label: t('breadcrumbs.import') },
         ]}
         action={
           <Link to="/admin/students" className="btn btn-secondary btn-sm" style={{ textDecoration: 'none' }}>
             <ArrowLeft size={16} />
-            <span>Quay lại danh sách</span>
+            <span>{t('import.backToList')}</span>
           </Link>
         }
       />
@@ -113,9 +115,9 @@ export const StudentImportPage: React.FC = () => {
         <div className="card">
           <div className="card-header">
             <div>
-              <h3 className="card-title">1. Chọn tệp danh sách Excel</h3>
+              <h3 className="card-title">{t('import.step1Title')}</h3>
               <p className="card-subtitle">
-                Hệ thống sẽ tự động kiểm tra định dạng và đọc dữ liệu từ dòng 3 trở đi
+                {t('import.step1Sub')}
               </p>
             </div>
           </div>
@@ -131,7 +133,7 @@ export const StudentImportPage: React.FC = () => {
         {/* Parsing state */}
         {isParsingClient && (
           <div className="card" style={{ padding: '2rem' }}>
-            <LoadingSpinner message="Đang đọc và phân tích cấu trúc tệp Excel..." />
+            <LoadingSpinner message={t('import.parsing')} />
           </div>
         )}
 
@@ -148,7 +150,7 @@ export const StudentImportPage: React.FC = () => {
           <div className="card">
             <div className="card-header">
               <h3 className="card-title" style={{ color: 'var(--color-error)' }}>
-                Kết quả kiểm tra dữ liệu từ máy chủ
+                {t('import.step3Title')}
               </h3>
             </div>
             <ImportErrorList errors={serverResult.errors} />
@@ -160,10 +162,7 @@ export const StudentImportPage: React.FC = () => {
           <div className="card">
             <div className="card-header">
               <div>
-                <h3 className="card-title">2. Xem trước & Kiểm tra dữ liệu</h3>
-                <p className="card-subtitle">
-                  Rà soát thông tin sinh viên trước khi gửi lên máy chủ để tạo tài khoản
-                </p>
+                <h3 className="card-title">{t('import.step2Title')}</h3>
               </div>
 
               <Button
@@ -173,7 +172,7 @@ export const StudentImportPage: React.FC = () => {
                 icon={<Send size={16} />}
                 disabled={clientParseResult.rows.length === 0}
               >
-                Xác nhận nhập {clientParseResult.validCount} sinh viên
+                {t('import.confirmImportBtn', { count: clientParseResult.validCount })}
               </Button>
             </div>
 
@@ -199,18 +198,18 @@ export const StudentImportPage: React.FC = () => {
               <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
                 {clientParseResult.invalidCount > 0 ? (
                   <span style={{ color: 'var(--color-error)', fontWeight: 500 }}>
-                    * Tệp có {clientParseResult.invalidCount} dòng chứa dữ liệu chưa hợp lệ. Backend áp dụng cơ chế "All-or-Nothing" (từ chối toàn bộ nếu có lỗi). Bạn nên sửa các dòng lỗi trước khi gửi.
+                    * {clientParseResult.invalidCount} {t('import.invalidRows')}
                   </span>
                 ) : (
                   <span style={{ color: 'var(--color-success)', fontWeight: 500 }}>
-                    ✓ Tất cả {clientParseResult.validCount} dòng đều hợp lệ và sẵn sàng nhập.
+                    ✓ {clientParseResult.validCount} {t('import.validRows')}
                   </span>
                 )}
               </div>
 
               <div style={{ display: 'flex', gap: '0.75rem' }}>
                 <Button variant="secondary" onClick={handleFileRemove} disabled={isSubmitting}>
-                  Hủy bỏ
+                  {t('common.cancel')}
                 </Button>
 
                 <Button
@@ -220,7 +219,7 @@ export const StudentImportPage: React.FC = () => {
                   icon={<Send size={16} />}
                   disabled={clientParseResult.rows.length === 0}
                 >
-                  Xác nhận nhập vào hệ thống
+                  {t('import.confirmImportBtn', { count: clientParseResult.validCount })}
                 </Button>
               </div>
             </div>

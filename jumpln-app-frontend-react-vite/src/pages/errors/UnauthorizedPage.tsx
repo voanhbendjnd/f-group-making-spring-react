@@ -1,10 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldAlert } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/common/Button';
 import { useAuth } from '@/app/providers/AuthContext';
 
 export const UnauthorizedPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isStudent, isAdmin } = useAuth();
 
@@ -43,14 +45,14 @@ export const UnauthorizedPage: React.FC = () => {
       </div>
 
       <h1 style={{ fontSize: '1.875rem', marginBottom: '0.5rem', color: 'var(--color-error)' }}>
-        Không đủ quyền truy cập
+        {t('errorPages.unauthorizedTitle')}
       </h1>
       <p style={{ maxWidth: '460px', color: 'var(--color-text-muted)', marginBottom: '1.75rem', lineHeight: 1.6 }}>
-        Tài khoản của bạn không được phân quyền để truy cập vào khu vực này. Nếu bạn cho rằng đây là một sự nhầm lẫn, vui lòng liên hệ Quản trị viên.
+        {t('errorPages.unauthorizedDesc')}
       </p>
 
       <Button variant="primary" onClick={handleGoHome}>
-        Quay lại trang chính
+        {t('errorPages.goMain')}
       </Button>
     </div>
   );

@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { UploadCloud, FileSpreadsheet, X, Download, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/common/Button';
 
 export interface FileDropzoneProps {
@@ -17,6 +18,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
   onFileRemove,
   disabled = false,
 }) => {
+  const { t } = useTranslation();
   const [isDragOver, setIsDragOver] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -26,18 +28,18 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
 
     // Validate extension
     if (!file.name.toLowerCase().endsWith('.xlsx')) {
-      setErrorMessage('Định dạng tệp không hợp lệ. Vui lòng chỉ chọn tệp Excel đuôi .xlsx');
+      setErrorMessage(t('import.invalidFormat'));
       return;
     }
 
     // Validate size
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      setErrorMessage('Dung lượng tệp vượt quá giới hạn 5 MB. Vui lòng chọn tệp nhỏ hơn.');
+      setErrorMessage(t('import.exceedsSize'));
       return;
     }
 
     if (file.size === 0) {
-      setErrorMessage('Tệp Excel đã chọn bị rỗng (0 bytes). Vui lòng kiểm tra lại.');
+      setErrorMessage(t('import.emptyFile'));
       return;
     }
 
@@ -112,25 +114,23 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
                 flexShrink: 0,
               }}
             >
-              <FileSpreadsheet size={28} />
+              <FileSpreadsheet size={24} />
             </div>
 
             <div style={{ minWidth: 0 }}>
               <div
                 style={{
                   fontWeight: 600,
-                  fontSize: '0.9375rem',
                   color: 'var(--color-text-main)',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                 }}
-                title={selectedFile.name}
               >
                 {selectedFile.name}
               </div>
               <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>
-                Dung lượng: {formatFileSize(selectedFile.size)} · Định dạng: Excel Workbook (.xlsx)
+                {formatFileSize(selectedFile.size)} · Excel Workbook (.xlsx)
               </div>
             </div>
           </div>
@@ -142,7 +142,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
               onClick={() => fileInputRef.current?.click()}
               disabled={disabled}
             >
-              Đổi tệp khác
+              {t('common.cancel')}
             </Button>
             <button
               type="button"
@@ -158,8 +158,8 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
                 display: 'flex',
                 alignItems: 'center',
               }}
-              title="Xóa tệp"
-              aria-label="Xóa tệp"
+              title={t('common.cancel')}
+              aria-label={t('common.cancel')}
             >
               <X size={18} />
             </button>
@@ -204,11 +204,14 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
           </div>
 
           <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--color-text-main)', marginBottom: '0.375rem' }}>
-            Kéo thả tệp Excel vào đây, hoặc <span style={{ color: 'var(--color-primary)', textDecoration: 'underline' }}>bấm để chọn</span>
+            {t('import.dropPrompt')}{' '}
+            <span style={{ color: 'var(--color-primary)', textDecoration: 'underline' }}>
+              {t('import.dropBrowse')}
+            </span>
           </h3>
 
           <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', maxWidth: '420px' }}>
-            Hỗ trợ định dạng <strong>.xlsx</strong> (tối đa 5 MB). Dữ liệu sinh viên được đọc từ dòng 3 của sheet đầu tiên.
+            {t('import.dropHint')}
           </p>
         </div>
       )}
@@ -238,7 +241,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <FileSpreadsheet size={18} style={{ color: 'var(--color-success)' }} />
-          <span>Bạn chưa có biểu mẫu chuẩn? Hãy tải tệp Excel mẫu để điền thông tin.</span>
+          <span>{t('import.samplePrompt')}</span>
         </div>
 
         <a
@@ -248,7 +251,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
           style={{ textDecoration: 'none' }}
         >
           <Download size={14} />
-          <span>Tải tệp mẫu</span>
+          <span>{t('import.sampleDownloadBtn')}</span>
         </a>
       </div>
     </div>
