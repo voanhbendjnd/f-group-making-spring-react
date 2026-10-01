@@ -146,6 +146,10 @@ public class UserService {
         return res;
     }
 
+    public void activateAccount(String activationKey, String password) {
+        activateAccountAndSetPassword(activationKey, password);
+    }
+
     public void activateAccountAndSetPassword(String activationKey, String password) {
         Instant now = Instant.now();
         User user = userRepository.findOneByActivationKey(activationKey)
