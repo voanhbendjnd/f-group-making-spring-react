@@ -1,6 +1,10 @@
 package tech.djnd.sample.app.web.rest;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
+import lombok.extern.slf4j.Slf4j;
+import net.logstash.logback.util.StringUtils;
 import org.apache.hc.core5.http.HttpHeaders;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -12,6 +16,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import tech.djnd.sample.app.domain.User;
 import tech.djnd.sample.app.security.AuthoritiesConstants;
@@ -25,22 +30,24 @@ import tech.djnd.sample.app.service.dto.BatchActivationResultDTO;
 import tech.djnd.sample.app.service.dto.ResLoginDTO;
 import tech.djnd.sample.app.service.dto.UserDTO;
 import tech.djnd.sample.app.service.errors.BadRequestResourceException;
+import tech.djnd.sample.app.service.errors.DataResourceNotFoundException;
 import tech.djnd.sample.app.util.anotation.ApiMessage;
-import tech.djnd.sample.app.web.rest.vm.ActivateAccountVM;
-import tech.djnd.sample.app.web.rest.vm.LoginVM;
-import tech.djnd.sample.app.web.rest.vm.MulUserId;
+import tech.djnd.sample.app.web.rest.vm.*;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
+@Slf4j
 @RequestMapping("/api")
 public class AccountResource {
     private final UserService userService;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final AuthService authService;
     private final MailService mailService;
+    private final PasswordEncoder passwordEncoder;
     @Value("${djnd.jwt.refresh-token-validity-in-seconds}")
     private Long refreshTokenExpiration;
     private final NotificationAsyncService notificationAsyncService;
@@ -50,13 +57,15 @@ public class AccountResource {
             AuthenticationManagerBuilder authenticationManagerBuilder,
             AuthService authService,
             MailService mailService,
-            NotificationAsyncService notificationAsyncService
+            NotificationAsyncService notificationAsyncService,
+            PasswordEncoder passwordEncoder
     ) {
         this.userService = userService;
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.notificationAsyncService = notificationAsyncService;
         this.mailService = mailService;
         this.authService = authService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /*
@@ -137,6 +146,38 @@ public class AccountResource {
     @PostMapping("/account/activate")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void activateAccount(@Valid @RequestBody ActivateAccountVM vm) {
-        userService.activateAccount(vm.getKey(), vm.getPassword());
+        userService.activateAccountAndSetPassword(vm.getKey(), vm.getPassword());
+    }
+
+    @PostMapping(path = "/account/reset-password/init")
+    public void requestPasswordReset(@RequestBody @Email @Size(min = 5, max = 255) String email) {
+        Optional<User> userExisting = userService.requestPasswordReset(email);
+        if(userExisting.isPresent()){
+            UserDTO dto = new  UserDTO();
+            dto.setResetKey(userExisting.get().getResetKey());
+            dto.setEmail(userExisting.get().getEmail());
+            mailService.sendPasswordResetMail(dto);
+        }
+        else{
+            log.info("Password reset requested for non existing mail");
+        }
+    }
+    @PostMapping(path = "/account/reset-password/finish")
+    public void finishPasswordReset(@RequestBody KeyAndPasswordVM vm) {
+        if(isPasswordLengthInvalid(vm.getNewPassword())){
+            throw new BadRequestResourceException("Password length is invalid", "userManagement", "passwordlengthinvalid");
+        }
+        Optional<User> user = userService.completePasswordReset(vm.getNewPassword(), vm.getResetKey());
+        if(user.isEmpty()){
+            passwordEncoder.encode(vm.getNewPassword());
+            throw new DataResourceNotFoundException("No user was found for this reset key", "userManagement", "usernotfound");
+        }
+    }
+    private static boolean isPasswordLengthInvalid(String password) {
+        return (
+                StringUtils.isEmpty(password) ||
+                        password.length() < ManagedUserVM.PASSWORD_MIN_LENGTH ||
+                        password.length() > ManagedUserVM.PASSWORD_MAX_LENGTH
+        );
     }
 }

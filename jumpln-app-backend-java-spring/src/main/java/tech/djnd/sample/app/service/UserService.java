@@ -146,7 +146,7 @@ public class UserService {
         return res;
     }
 
-    public void activateAccount(String activationKey, String password) {
+    public void activateAccountAndSetPassword(String activationKey, String password) {
         Instant now = Instant.now();
         User user = userRepository.findOneByActivationKey(activationKey)
                 .filter(candidate -> Boolean.FALSE.equals(candidate.getActivated()))
@@ -227,4 +227,62 @@ public class UserService {
         return expiresAt != null && expiresAt.isAfter(now);
     }
 
+
+    /*
+    * Required request with email for set password account
+    * */
+    public Optional<User> requestPasswordReset(String email){
+        String normalizedEmail = email.trim().toLowerCase(Locale.ENGLISH);
+//        User existingUser = userRepository.findOneByEmail(normalizedEmail)
+//                .orElseThrow(() -> new DataResourceNotFoundException(String.format("User with email '%s' not found", normalizedEmail), "userManagement", "usernotfound"));
+//        if(!existingUser.getActivated()){
+//            throw new AccessDeniedException(String.format("User with email '%s' is not activated", normalizedEmail));
+//        }
+//        existingUser.setResetKey(RandomUtil.generateResetKey());
+//        existingUser.setResetDate(Instant.now());
+//        userRepository.save(existingUser);
+//        this.clearUserCaches(existingUser);
+//        UserDTO dto = new UserDTO();
+//        dto.setEmail(existingUser.getEmail());
+//        dto.setResetKey(existingUser.getResetKey());
+//        return dto;
+        return userRepository.findOneByEmail(normalizedEmail)
+                .filter(User::getActivated)
+                .map(user ->{
+                    user.setResetKey(RandomUtil.generateResetKey());
+                    user.setResetDate(Instant.now());
+                    this.clearUserCaches(user);
+                    return user;
+                });
+    }
+    /*
+    * Can update new password with a day
+    * */
+    public Optional<User> completePasswordReset(String newPassword, String resetKey) {
+//        User userExisting = userRepository.findOneByResetKey(resetKey)
+//                .orElseThrow(() -> new DataResourceNotFoundException("ResetKey not found", "userManagement", "usernotfound"));
+//        if(!userExisting.getActivated()){
+//            throw new AccessDeniedException("account not activate");
+//        }
+//        if(userExisting.getResetDate().isBefore(Instant.now().minus(1, ChronoUnit.DAYS))){
+//            throw new AccessDeniedException("account has expired update password");
+//        }
+//        userExisting.setPassword(passwordEncoder.encode(newPassword));
+//        userExisting.setResetKey(null);
+//        userExisting.setResetDate(null);
+//        userRepository.save(userExisting);
+//        this.clearUserCaches(userExisting);
+//        UserDTO dto = new UserDTO();
+//        dto.setEmail(userExisting.getEmail());
+//        return dto;
+        return userRepository.findOneByResetKey(resetKey)
+                .filter(user -> user.getResetDate().isAfter(Instant.now().minus(1, ChronoUnit.DAYS)))
+                .map(user ->{
+                    user.setPassword(passwordEncoder.encode(newPassword));
+                    user.setResetKey(null);
+                    user.setResetDate(null);
+                    this.clearUserCaches(user);
+                    return user;
+                });
+    }
 }

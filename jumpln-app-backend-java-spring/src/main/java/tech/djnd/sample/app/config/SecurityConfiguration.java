@@ -101,6 +101,8 @@ public class SecurityConfiguration {
                                 .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/account/activate").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/account/activate/verify").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/account/reset-password/init").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/account/reset-password/finish").permitAll()
 
                                 .requestMatchers(whiteList).permitAll()
                                 .anyRequest().authenticated()

@@ -34,7 +34,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<User> findOneByActivationKey(String activationKey);
-
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<User> findOneByResetKey(String resetKey);
     Optional<User> findByActivationKey(String activationKey);
 
     List<User> findAllByActivatedIsFalseAndActivationKeyNotNullAndLastModifiedDateBefore(Instant lastModifiedDateBefore);
