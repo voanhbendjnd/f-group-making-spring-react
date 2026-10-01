@@ -1,5 +1,6 @@
 import axios, { type AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
 import { storage } from '@/utils/storage';
+import i18n from '@/locales/i18n';
 import { translateErrorMessage } from './errorTranslator';
 import type { ApiError, RestResponse } from './types';
 
@@ -14,12 +15,15 @@ export const apiClient: AxiosInstance = axios.create({
   timeout: 30000,
 });
 
-// Request interceptor: Attach JWT Bearer token if present
+// Request interceptor: Attach JWT Bearer token and Accept-Language header
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = storage.getToken();
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (config.headers) {
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      config.headers['Accept-Language'] = i18n.language || 'vi';
     }
     return config;
   },

@@ -1,10 +1,12 @@
+import i18n from '@/locales/i18n';
+
 /**
- * Translates technical backend errors into user-friendly Vietnamese messages.
+ * Translates technical backend errors into user-friendly localized messages.
  * Never exposes raw HTTP 403, ConstraintViolationException, or SQL jargon to non-tech users.
  */
 export function translateErrorMessage(error: any): string {
   if (!error) {
-    return 'Đã xảy ra lỗi không xác định. Vui lòng thử lại sau.';
+    return i18n.t('errors.unknown');
   }
 
   // If already an ApiError with translated or custom message
@@ -19,60 +21,60 @@ export function translateErrorMessage(error: any): string {
   switch (errorKey) {
     case 'error.emailnotfound':
     case 'emailnotfound':
-      return 'Không tìm thấy tài khoản với email này trong hệ thống.';
+      return i18n.t('errors.emailNotFound');
 
     case 'alreadyactivated':
     case 'error.alreadyactivated':
-      return 'Tài khoản này đã được kích hoạt thành công từ trước.';
+      return i18n.t('errors.alreadyActivated');
 
     case 'invalidactivationkey':
     case 'error.invalidactivationkey':
-      return 'Liên kết kích hoạt không hợp lệ hoặc đã hết hạn. Vui lòng liên hệ Quản trị viên để nhận liên kết mới.';
+      return i18n.t('errors.invalidActivationKey');
 
     case 'resetkeyinvalidorexpired':
     case 'error.resetkeyinvalidorexpired':
-      return 'Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng gửi lại yêu cầu quên mật khẩu.';
+      return i18n.t('errors.resetKeyInvalidOrExpired');
 
     case 'passwordlengthinvalid':
     case 'error.passwordlengthinvalid':
-      return 'Độ dài mật khẩu không hợp lệ (từ 4 đến 100 ký tự).';
+      return i18n.t('errors.passwordLengthInvalid');
 
     case 'error.idnotfound':
     case 'idnotfound':
-      return 'Không tìm thấy một số tài khoản được yêu cầu trong cơ sở dữ liệu.';
+      return i18n.t('errors.idNotFound');
 
     case 'invalidids':
     case 'error.invalidids':
-      return 'Danh sách mã tài khoản không hợp lệ.';
+      return i18n.t('errors.invalidIds');
 
     case 'studentnotfound':
-      return 'Không tìm thấy thông tin sinh viên yêu cầu.';
+      return i18n.t('errors.studentNotFound');
 
     case 'error.excel.invalid':
     case 'Excel file contains no student data.':
-      return 'Tệp Excel không chứa dữ liệu sinh viên hợp lệ hoặc bị sai định dạng.';
+      return i18n.t('errors.excelInvalid');
 
     case 'Only .xlsx files are supported.':
-      return 'Hệ thống chỉ hỗ trợ định dạng tệp Excel .xlsx.';
+      return i18n.t('errors.excelOnlyXlsx');
 
     case 'File must not be empty.':
-      return 'Tệp Excel đã chọn bị rỗng.';
+      return i18n.t('errors.fileEmpty');
 
     case 'error.http.401':
     case 'Unauthorized':
-      return 'Thông tin đăng nhập không chính xác hoặc phiên làm việc đã hết hạn.';
+      return i18n.t('errors.unauthorized');
 
     case 'error.http.403':
     case 'Access Denied':
     case 'error.donotpermission':
-      return 'Bạn không có quyền thực hiện thao tác này.';
+      return i18n.t('errors.accessDenied');
 
     case 'Bad credentials':
-      return 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.';
+      return i18n.t('errors.badCredentials');
 
     case 'error.userexsist':
     case 'userexists':
-      return 'Email này đã được sử dụng cho một tài khoản khác.';
+      return i18n.t('errors.userExists');
 
     default:
       break;
@@ -80,23 +82,23 @@ export function translateErrorMessage(error: any): string {
 
   // Check specific status codes
   if (status === 401) {
-    return 'Email hoặc mật khẩu không chính xác. Vui lòng thử lại.';
+    return i18n.t('errors.status401');
   }
 
   if (status === 403) {
-    return 'Tài khoản của bạn không đủ quyền hạn để thực hiện tác vụ này.';
+    return i18n.t('errors.status403');
   }
 
   if (status === 404) {
-    return 'Dữ liệu yêu cầu không tồn tại trên hệ thống.';
+    return i18n.t('errors.status404');
   }
 
   if (status === 413) {
-    return 'Dung lượng tệp tải lên vượt quá giới hạn cho phép (tối đa 5 MB).';
+    return i18n.t('errors.status413');
   }
 
   if (status >= 500) {
-    return 'Máy chủ đang gặp sự cố tạm thời. Vui lòng thử lại sau ít phút.';
+    return i18n.t('errors.status500');
   }
 
   if (detail && typeof detail === 'string' && !detail.includes('Exception') && !detail.includes('java.')) {
@@ -104,8 +106,8 @@ export function translateErrorMessage(error: any): string {
   }
 
   if (error.message && error.message.includes('Network Error')) {
-    return 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại đường truyền internet.';
+    return i18n.t('errors.networkError');
   }
 
-  return 'Thao tác không thành công. Vui lòng kiểm tra lại thông tin và thử lại.';
+  return i18n.t('errors.generalFailure');
 }
