@@ -1,8 +1,6 @@
 package tech.djnd.sample.app.web.rest;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Size;
 import lombok.extern.slf4j.Slf4j;
 import net.logstash.logback.util.StringUtils;
 import org.apache.hc.core5.http.HttpHeaders;
@@ -28,9 +26,9 @@ import tech.djnd.sample.app.service.UserService;
 import tech.djnd.sample.app.service.dto.ActivationKeyVerifyDTO;
 import tech.djnd.sample.app.service.dto.BatchActivationResultDTO;
 import tech.djnd.sample.app.service.dto.ResLoginDTO;
+import tech.djnd.sample.app.service.dto.ResetKeyVerifyDTO;
 import tech.djnd.sample.app.service.dto.UserDTO;
 import tech.djnd.sample.app.service.errors.BadRequestResourceException;
-import tech.djnd.sample.app.service.errors.DataResourceNotFoundException;
 import tech.djnd.sample.app.util.anotation.ApiMessage;
 import tech.djnd.sample.app.web.rest.vm.*;
 
@@ -149,28 +147,39 @@ public class AccountResource {
         userService.activateAccountAndSetPassword(vm.getKey(), vm.getPassword());
     }
 
+    @GetMapping("/account/reset-password/verify")
+    @ApiMessage("Reset key verified successfully")
+    public ResponseEntity<ResetKeyVerifyDTO> verifyResetKey(@RequestParam("key") String key) {
+        ResetKeyVerifyDTO result = userService.verifyResetKey(key);
+        return ResponseEntity.ok(result);
+    }
+
     @PostMapping(path = "/account/reset-password/init")
-    public void requestPasswordReset(@RequestBody @Email @Size(min = 5, max = 255) String email) {
-        Optional<User> userExisting = userService.requestPasswordReset(email);
-        if(userExisting.isPresent()){
-            UserDTO dto = new  UserDTO();
+    @ResponseStatus(HttpStatus.OK)
+    @ApiMessage("Password reset request accepted")
+    public void requestPasswordReset(@Valid @RequestBody ResetPasswordInitVM vm) {
+        Optional<User> userExisting = userService.requestPasswordReset(vm.getEmail());
+        if (userExisting.isPresent()) {
+            UserDTO dto = new UserDTO();
             dto.setResetKey(userExisting.get().getResetKey());
             dto.setEmail(userExisting.get().getEmail());
             mailService.sendPasswordResetMail(dto);
-        }
-        else{
+        } else {
             log.info("Password reset requested for non existing mail");
         }
     }
+
     @PostMapping(path = "/account/reset-password/finish")
-    public void finishPasswordReset(@RequestBody KeyAndPasswordVM vm) {
-        if(isPasswordLengthInvalid(vm.getNewPassword())){
+    @ResponseStatus(HttpStatus.OK)
+    @ApiMessage("Password has been reset successfully")
+    public void finishPasswordReset(@Valid @RequestBody KeyAndPasswordVM vm) {
+        if (isPasswordLengthInvalid(vm.getNewPassword())) {
             throw new BadRequestResourceException("Password length is invalid", "userManagement", "passwordlengthinvalid");
         }
         Optional<User> user = userService.completePasswordReset(vm.getNewPassword(), vm.getResetKey());
-        if(user.isEmpty()){
+        if (user.isEmpty()) {
             passwordEncoder.encode(vm.getNewPassword());
-            throw new DataResourceNotFoundException("No user was found for this reset key", "userManagement", "usernotfound");
+            throw new BadRequestResourceException("Reset key is invalid or expired", "userManagement", "resetkeyinvalidorexpired");
         }
     }
     private static boolean isPasswordLengthInvalid(String password) {

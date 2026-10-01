@@ -10,6 +10,7 @@ import tech.djnd.sample.app.domain.User;
 import tech.djnd.sample.app.repository.AuthorityRepository;
 import tech.djnd.sample.app.repository.UserRepository;
 import tech.djnd.sample.app.security.AuthoritiesConstants;
+import tech.djnd.sample.app.service.dto.ResetKeyVerifyDTO;
 import tech.djnd.sample.app.service.dto.UserDTO;
 import tech.djnd.sample.app.service.errors.AccessDeniedException;
 import tech.djnd.sample.app.service.errors.BadRequestResourceException;
@@ -198,6 +199,31 @@ public class UserService {
                 .build();
     }
 
+    public ResetKeyVerifyDTO verifyResetKey(String resetKey) {
+        if (resetKey == null || resetKey.isBlank()) {
+            throw new BadRequestResourceException(
+                    "Reset key must not be blank",
+                    "userManagement",
+                    "resetkeyinvalidorexpired"
+            );
+        }
+        Instant now = Instant.now();
+        User user = userRepository.findOneByResetKey(resetKey.trim())
+                .filter(User::getActivated)
+                .filter(candidate -> candidate.getResetDate() != null && candidate.getResetDate().isAfter(now.minus(1, ChronoUnit.DAYS)))
+                .orElseThrow(() -> new BadRequestResourceException(
+                        "Reset key is invalid or expired",
+                        "userManagement",
+                        "resetkeyinvalidorexpired"
+                ));
+
+        return ResetKeyVerifyDTO.builder()
+                .valid(true)
+                .email(user.getEmail())
+                .name(user.getName())
+                .build();
+    }
+
     public UserDTO initActivatedKeyAccountById(Long userId) {
         if (userId == null) {
             throw new BadRequestResourceException("User ID must not be null", "userManagement", "idnull");
@@ -252,39 +278,37 @@ public class UserService {
 //        return dto;
         return userRepository.findOneByEmail(normalizedEmail)
                 .filter(User::getActivated)
-                .map(user ->{
+                .filter(user -> {
+                    // Cooldown: prevent email flooding if requested within the last 60 seconds
+                    if (user.getResetDate() != null && user.getResetDate().isAfter(Instant.now().minus(60, ChronoUnit.SECONDS))) {
+                        return false;
+                    }
+                    return true;
+                })
+                .map(user -> {
                     user.setResetKey(RandomUtil.generateResetKey());
                     user.setResetDate(Instant.now());
                     this.clearUserCaches(user);
                     return user;
                 });
     }
-    /*
-    * Can update new password with a day
-    * */
+
+    /**
+     * Complete password reset with validity check and session/token revocation.
+     */
     public Optional<User> completePasswordReset(String newPassword, String resetKey) {
-//        User userExisting = userRepository.findOneByResetKey(resetKey)
-//                .orElseThrow(() -> new DataResourceNotFoundException("ResetKey not found", "userManagement", "usernotfound"));
-//        if(!userExisting.getActivated()){
-//            throw new AccessDeniedException("account not activate");
-//        }
-//        if(userExisting.getResetDate().isBefore(Instant.now().minus(1, ChronoUnit.DAYS))){
-//            throw new AccessDeniedException("account has expired update password");
-//        }
-//        userExisting.setPassword(passwordEncoder.encode(newPassword));
-//        userExisting.setResetKey(null);
-//        userExisting.setResetDate(null);
-//        userRepository.save(userExisting);
-//        this.clearUserCaches(userExisting);
-//        UserDTO dto = new UserDTO();
-//        dto.setEmail(userExisting.getEmail());
-//        return dto;
-        return userRepository.findOneByResetKey(resetKey)
-                .filter(user -> user.getResetDate().isAfter(Instant.now().minus(1, ChronoUnit.DAYS)))
-                .map(user ->{
+        if (resetKey == null || resetKey.isBlank()) {
+            return Optional.empty();
+        }
+        return userRepository.findOneByResetKey(resetKey.trim())
+                .filter(user -> user.getResetDate() != null && user.getResetDate().isAfter(Instant.now().minus(1, ChronoUnit.DAYS)))
+                .map(user -> {
                     user.setPassword(passwordEncoder.encode(newPassword));
                     user.setResetKey(null);
                     user.setResetDate(null);
+                    user.setSessionId(UUID.randomUUID().toString());
+                    user.setRefreshToken(null);
+                    userRepository.save(user);
                     this.clearUserCaches(user);
                     return user;
                 });
