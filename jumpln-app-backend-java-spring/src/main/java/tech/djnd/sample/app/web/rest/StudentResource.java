@@ -1,20 +1,22 @@
 package tech.djnd.sample.app.web.rest;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tech.djnd.sample.app.security.AuthoritiesConstants;
 import tech.djnd.sample.app.service.StudentService;
+import tech.djnd.sample.app.service.dto.BatchActivationResultDTO;
 import tech.djnd.sample.app.service.dto.ImportResultDTO;
+import tech.djnd.sample.app.service.dto.ResultPaginationDTO;
+import tech.djnd.sample.app.service.dto.StudentDTO;
+import tech.djnd.sample.app.util.anotation.ApiMessage;
 
 /**
- * REST controller quản lý nghiệp vụ liên quan đến {@link tech.djnd.sample.app.domain.Student}.
+ * REST controller for managing {@link tech.djnd.sample.app.domain.Student}.
  *
  * <p>Endpoint prefix: {@code /api/students}</p>
  */
@@ -24,32 +26,71 @@ import tech.djnd.sample.app.service.dto.ImportResultDTO;
 public class StudentResource {
 
     private final StudentService studentService;
+
     public StudentResource(StudentService studentService) {
         this.studentService = studentService;
     }
+
     /**
-     * POST /api/students/import : Import danh sách sinh viên từ file Excel (.xlsx).
+     * GET /api/students : Get paginated, searched, and filtered student list.
      *
-     * <p>Chỉ ADMIN mới có quyền thực hiện thao tác này.</p>
+     * <p>Only ADMIN can perform this operation.</p>
+     */
+    @GetMapping
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @ApiMessage("Get student list successfully")
+    public ResponseEntity<ResultPaginationDTO> getAllStudents(
+            @RequestParam(name = "search", required = false) String search,
+            @RequestParam(name = "majorCode", required = false) String majorCode,
+            @RequestParam(name = "activated", required = false) Boolean activated,
+            @RequestParam(name = "hasActivationKey", required = false) Boolean hasActivationKey,
+            Pageable pageable) {
+
+        log.debug("REST request to get students with filter: search={}, majorCode={}, activated={}, hasKey={}",
+                search, majorCode, activated, hasActivationKey);
+        ResultPaginationDTO result = studentService.getStudents(search, majorCode, activated, hasActivationKey, pageable);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * GET /api/students/{userId} : Get student details by user ID.
      *
-     * <p>File Excel phải theo định dạng chuẩn:
-     * <ul>
-     *   <li>Cột B (index 1): Mã sinh viên (rollNumber)</li>
-     *   <li>Cột C (index 2): Họ và tên (fullName)</li>
-     *   <li>Cột D (index 3): Ngành gốc (originalMajor), ví dụ: BEN_CHN_ET_19C</li>
-     * </ul>
-     * </p>
+     * <p>Only ADMIN can perform this operation.</p>
+     */
+    @GetMapping("/{userId}")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @ApiMessage("Get student details successfully")
+    public ResponseEntity<StudentDTO> getStudentByUserId(@PathVariable("userId") Long userId) {
+        log.debug("REST request to get student details for userId={}", userId);
+        StudentDTO result = studentService.getStudentByUserId(userId);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * POST /api/students/activate/all : Send activation emails to all matching unactivated students.
      *
-     * @param file File Excel được upload (multipart/form-data, field name: "file")
-     * @return {@link ImportResultDTO}
-     *         <ul>
-     *           <li>HTTP 200 + {@code success=true}: Import thành công, {@code totalImported} là số dòng đã lưu.</li>
-     *           <li>HTTP 200 + {@code success=false}: Có lỗi validation, {@code errors} chứa chi tiết từng lỗi.</li>
-     *           <li>HTTP 400: File không hợp lệ (sai định dạng, rỗng, vượt dung lượng).</li>
-     *         </ul>
+     * <p>Only ADMIN can perform this operation.</p>
+     */
+    @PostMapping("/activate/all")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @ApiMessage("Batch activation request accepted successfully")
+    public ResponseEntity<BatchActivationResultDTO> activateAllStudents(
+            @RequestParam(name = "search", required = false) String search,
+            @RequestParam(name = "majorCode", required = false) String majorCode) {
+
+        log.debug("REST request to activate all matching unactivated students: search={}, majorCode={}", search, majorCode);
+        BatchActivationResultDTO result = studentService.activateAllMatching(search, majorCode);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * POST /api/students/import : Import student list from Excel file (.xlsx).
+     *
+     * <p>Only ADMIN can perform this operation.</p>
      */
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @ApiMessage("Import students successfully")
     public ResponseEntity<ImportResultDTO> importStudentsFromExcel(
             @RequestParam("file") MultipartFile file) {
 

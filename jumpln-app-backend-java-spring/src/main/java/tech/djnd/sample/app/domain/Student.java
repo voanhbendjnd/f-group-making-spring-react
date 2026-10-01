@@ -35,4 +35,7 @@ public class Student{
     @Column(name = "email", nullable = false)
     String email;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    User user;
 }
