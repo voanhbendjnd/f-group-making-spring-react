@@ -53,6 +53,7 @@ Phối hợp API thông minh nghĩa là tái sử dụng dữ liệu đã có, c
 | [07 — Phụ thuộc backend](07-phu-thuoc-backend.md) | Những điểm cần bổ sung hoặc sửa, bằng chứng, ảnh hưởng và điều kiện mở tính năng |
 | [08 — Quy tắc cho người và agent](08-quy-tac-cho-nguoi-va-agent.md) | Quy tắc bắt buộc, bàn giao, quản lý thay đổi và mẫu giao việc |
 | [09 — Hướng dẫn vận hành và Báo cáo triển khai](09-huong-dan-van-hanh-frontend.md) | Kiến trúc đã code, danh mục API thực tế, các flow và hướng dẫn chạy kiểm thử |
+| [10 — Hỗ trợ đa ngôn ngữ (i18n)](10-da-ngon-ngu-i18n.md) | Kiến trúc i18n, cấu trúc từ điển song ngữ vi/en, component chuyển đổi và quy tắc |
 
 ## 5. Nhãn trạng thái thống nhất
 
