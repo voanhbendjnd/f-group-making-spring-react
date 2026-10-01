@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from './Button';
 import { Modal } from './Modal';
 
@@ -19,13 +20,17 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   open,
   title,
   message,
-  confirmText = 'Xác nhận',
-  cancelText = 'Hủy bỏ',
+  confirmText,
+  cancelText,
   isDanger = false,
   isLoading = false,
   onConfirm,
   onCancel,
 }) => {
+  const { t } = useTranslation();
+  const displayConfirm = confirmText ?? t('common.confirm');
+  const displayCancel = cancelText ?? t('common.cancel');
+
   return (
     <Modal
       open={open}
@@ -34,14 +39,14 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       footer={
         <>
           <Button variant="secondary" onClick={onCancel} disabled={isLoading}>
-            {cancelText}
+            {displayCancel}
           </Button>
           <Button
             variant={isDanger ? 'danger' : 'primary'}
             onClick={onConfirm}
             loading={isLoading}
           >
-            {confirmText}
+            {displayConfirm}
           </Button>
         </>
       }

@@ -1,11 +1,16 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 
 export const AuthLayout: React.FC = () => {
+  const { t } = useTranslation();
+
   return (
     <div
       style={{
         minHeight: '100vh',
+        position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -15,6 +20,18 @@ export const AuthLayout: React.FC = () => {
         padding: '2rem 1rem',
       }}
     >
+      {/* Top right language switcher */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '1.25rem',
+          right: '1.25rem',
+          zIndex: 10,
+        }}
+      >
+        <LanguageSwitcher size="sm" showLabel />
+      </div>
+
       <div style={{ width: '100%', maxWidth: '460px', margin: '0 auto' }}>
         {/* Brand header */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
@@ -37,10 +54,10 @@ export const AuthLayout: React.FC = () => {
             F
           </div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text-main)', letterSpacing: '-0.02em' }}>
-            F-Group Making
+            {t('common.systemBrand')}
           </h2>
           <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
-            Hệ thống phân nhóm & quản lý học tập
+            {t('common.systemTitle')}
           </p>
         </div>
 
@@ -48,7 +65,7 @@ export const AuthLayout: React.FC = () => {
 
         {/* Footer info */}
         <div style={{ textAlign: 'center', marginTop: '2rem', fontSize: '0.75rem', color: 'var(--color-text-subtle)' }}>
-          © 2026 F-Group Making · Hệ thống bảo mật FPT University
+          {t('common.copyright')}
         </div>
       </div>
     </div>

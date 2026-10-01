@@ -1,5 +1,6 @@
 import React, { forwardRef, useState } from 'react';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -10,6 +11,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, hint, error, required, type = 'text', className = '', id, ...props }, ref) => {
+    const { t } = useTranslation();
     const [showPassword, setShowPassword] = useState(false);
     const inputId = id || `input-${Math.random().toString(36).substring(2, 9)}`;
     const isPassword = type === 'password';
@@ -53,7 +55,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                 padding: '4px',
               }}
               tabIndex={-1}
-              aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiển thị mật khẩu'}
+              aria-label={showPassword ? t('common.hidePassword') : t('common.showPassword')}
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>

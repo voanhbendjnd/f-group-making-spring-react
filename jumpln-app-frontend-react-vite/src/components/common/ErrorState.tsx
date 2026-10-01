@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from './Button';
 
 export interface ErrorStateProps {
@@ -9,10 +10,14 @@ export interface ErrorStateProps {
 }
 
 export const ErrorState: React.FC<ErrorStateProps> = ({
-  title = 'Đã xảy ra lỗi khi tải dữ liệu',
-  message = 'Không thể kết nối hoặc nhận phản hồi từ hệ thống. Vui lòng kiểm tra lại.',
+  title,
+  message,
   onRetry,
 }) => {
+  const { t } = useTranslation();
+  const displayTitle = title ?? t('common.errorTitle');
+  const displayMessage = message ?? t('common.errorDesc');
+
   return (
     <div
       style={{
@@ -45,15 +50,15 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
       </div>
 
       <h3 style={{ fontSize: '1.125rem', color: 'var(--color-error)', marginBottom: '0.375rem' }}>
-        {title}
+        {displayTitle}
       </h3>
       <p style={{ maxWidth: '420px', fontSize: '0.875rem', marginBottom: onRetry ? '1.25rem' : '0' }}>
-        {message}
+        {displayMessage}
       </p>
 
       {onRetry && (
         <Button variant="secondary" size="sm" icon={<RefreshCw size={14} />} onClick={onRetry}>
-          Thử lại
+          {t('common.retry')}
         </Button>
       )}
     </div>

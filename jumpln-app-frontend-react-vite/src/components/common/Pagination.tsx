@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 import type { PaginationMeta } from '@/features/students/types';
 
 export interface PaginationProps {
@@ -15,6 +16,7 @@ export const Pagination: React.FC<PaginationProps> = ({
   onPageChange,
   onPageSizeChange,
 }) => {
+  const { t } = useTranslation();
   const pageSize = meta?.pageSize || 10;
   const total = meta?.total || 0;
   const totalPages = Math.max(1, meta?.pages || 1);
@@ -60,13 +62,16 @@ export const Pagination: React.FC<PaginationProps> = ({
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <span>
-          Hiển thị <strong>{startRecord}</strong> - <strong>{endRecord}</strong> trên tổng số{' '}
-          <strong>{total}</strong> sinh viên
+          <Trans
+            i18nKey="pagination.showing"
+            values={{ start: startRecord, end: endRecord, total }}
+            components={{ strong: <strong /> }}
+          />
         </span>
 
         {onPageSizeChange && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginLeft: '0.5rem' }}>
-            <span>Số lượng/trang:</span>
+            <span>{t('pagination.perPage')}</span>
             <select
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
@@ -107,7 +112,7 @@ export const Pagination: React.FC<PaginationProps> = ({
             opacity: activePage <= 1 ? 0.5 : 1,
             transition: 'all var(--transition-fast)',
           }}
-          aria-label="Trang trước"
+          aria-label={t('pagination.prev')}
         >
           <ChevronLeft size={16} />
         </button>
@@ -156,7 +161,7 @@ export const Pagination: React.FC<PaginationProps> = ({
             opacity: activePage >= totalPages ? 0.5 : 1,
             transition: 'all var(--transition-fast)',
           }}
-          aria-label="Trang sau"
+          aria-label={t('pagination.next')}
         >
           <ChevronRight size={16} />
         </button>

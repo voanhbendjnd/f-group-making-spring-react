@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import i18n from '@/locales/i18n';
 import { authApi } from '@/features/auth/api/authApi';
 import type { LoginRequest } from '@/features/auth/types';
 import { storage, type StoredUser } from '@/utils/storage';
@@ -26,7 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const customEvent = e as CustomEvent<{ message?: string }>;
       setUser(null);
       storage.clearAll();
-      info(customEvent.detail?.message || 'Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.');
+      info(customEvent.detail?.message || i18n.t('common.sessionExpired'));
     },
     [info]
   );
@@ -52,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       storage.setUser(storedUser);
       setUser(storedUser);
     } catch (err: any) {
-      error(err.message || 'Đăng nhập không thành công.');
+      error(err.message || i18n.t('auth.loginFailed'));
       throw err;
     } finally {
       setIsLoading(false);
@@ -62,7 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = useCallback(() => {
     storage.clearAll();
     setUser(null);
-    info('Bạn đã đăng xuất an toàn khỏi hệ thống.');
+    info(i18n.t('common.logoutSuccess'));
   }, [info]);
 
   const authorities = user?.authorities || [];

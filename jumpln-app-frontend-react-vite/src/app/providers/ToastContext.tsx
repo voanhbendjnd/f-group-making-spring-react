@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useState } from 'react';
 import { CheckCircle2, AlertTriangle, AlertCircle, Info, X } from 'lucide-react';
+import i18n from '@/locales/i18n';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -80,7 +81,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                   display: 'flex',
                   alignItems: 'center',
                 }}
-                aria-label="Đóng thông báo"
+                aria-label={i18n.t('common.closeToast')}
               >
                 <X size={16} />
               </button>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { FolderSearch } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from './Button';
 
 export interface EmptyStateProps {
@@ -11,12 +12,16 @@ export interface EmptyStateProps {
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
-  title = 'Không tìm thấy dữ liệu',
-  description = 'Hiện tại chưa có dữ liệu nào phù hợp với bộ lọc hoặc từ khóa tìm kiếm của bạn.',
+  title,
+  description,
   icon,
   actionText,
   onAction,
 }) => {
+  const { t } = useTranslation();
+  const displayTitle = title ?? t('common.emptyTitle');
+  const displayDesc = description ?? t('common.emptyDesc');
+
   return (
     <div
       style={{
@@ -48,9 +53,9 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         {icon || <FolderSearch size={32} />}
       </div>
 
-      <h3 style={{ fontSize: '1.125rem', marginBottom: '0.375rem' }}>{title}</h3>
+      <h3 style={{ fontSize: '1.125rem', marginBottom: '0.375rem' }}>{displayTitle}</h3>
       <p style={{ maxWidth: '420px', fontSize: '0.875rem', marginBottom: actionText ? '1.25rem' : '0' }}>
-        {description}
+        {displayDesc}
       </p>
 
       {actionText && onAction && (

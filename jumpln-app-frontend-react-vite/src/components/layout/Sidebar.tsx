@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
   Users,
@@ -19,6 +20,7 @@ export interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleLogout = () => {
     logout();
@@ -29,24 +31,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     ? [
         {
           to: '/admin/dashboard',
-          label: 'Tổng quan',
+          label: t('nav.dashboard'),
           icon: <LayoutDashboard size={18} />,
         },
         {
           to: '/admin/students',
-          label: 'Danh sách sinh viên',
+          label: t('nav.students'),
           icon: <Users size={18} />,
         },
         {
           to: '/admin/students/import',
-          label: 'Nhập từ Excel',
+          label: t('nav.importExcel'),
           icon: <Upload size={18} />,
         },
       ]
     : [
         {
           to: '/student/dashboard',
-          label: 'Bảng điều khiển',
+          label: t('nav.studentDashboard'),
           icon: <LayoutDashboard size={18} />,
         },
       ];
@@ -82,10 +84,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </div>
         <div>
           <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--color-text-main)', letterSpacing: '-0.01em' }}>
-            F-Group Making
+            {t('common.systemBrand')}
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--color-text-subtle)' }}>
-            Hệ thống xếp nhóm FPT
+            {t('sidebar.brandSub')}
           </div>
         </div>
       </div>
@@ -103,7 +105,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             marginBottom: '0.25rem',
           }}
         >
-          {isAdmin ? 'Quản trị hệ thống' : 'Sinh viên'}
+          {isAdmin ? t('sidebar.adminSection') : t('sidebar.studentSection')}
         </div>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
@@ -144,12 +146,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.375rem', color: '#166534', fontWeight: 600, fontSize: '0.8125rem' }}>
               <Sparkles size={16} />
-              <span>Quy trình chuẩn</span>
+              <span>{t('sidebar.workflowTitle')}</span>
             </div>
             <p style={{ fontSize: '0.75rem', color: '#14532d', lineHeight: 1.4 }}>
-              1. Nhập Excel sinh viên<br />
-              2. Gửi email kích hoạt<br />
-              3. Sinh viên tự đặt mật khẩu
+              {t('sidebar.step1')}<br />
+              {t('sidebar.step2')}<br />
+              {t('sidebar.step3')}
             </p>
           </div>
         )}
@@ -202,11 +204,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '1px' }}>
               {isAdmin ? (
                 <span className="badge badge-info" style={{ fontSize: '0.6875rem', padding: '1px 6px' }}>
-                  <ShieldCheck size={11} /> Admin
+                  <ShieldCheck size={11} /> {t('sidebar.adminRole')}
                 </span>
               ) : (
                 <span className="badge badge-success" style={{ fontSize: '0.6875rem', padding: '1px 6px' }}>
-                  <UserCheck size={11} /> Sinh viên
+                  <UserCheck size={11} /> {t('sidebar.studentRole')}
                 </span>
               )}
             </div>
@@ -227,8 +229,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             alignItems: 'center',
             transition: 'color var(--transition-fast)',
           }}
-          title="Đăng xuất"
-          aria-label="Đăng xuất"
+          title={t('common.logout')}
+          aria-label={t('common.logout')}
         >
           <LogOut size={18} />
         </button>

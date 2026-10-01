@@ -1,5 +1,6 @@
 import React from 'react';
 import { CheckCircle2, Clock, Mail, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export interface StatusBadgeProps {
   activated?: boolean;
@@ -12,11 +13,13 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
   hasActivationKey,
   isKeyExpired,
 }) => {
+  const { t } = useTranslation();
+
   if (activated) {
     return (
       <span className="badge badge-success">
         <CheckCircle2 size={13} />
-        <span>Đã kích hoạt</span>
+        <span>{t('statusBadge.activated')}</span>
       </span>
     );
   }
@@ -26,14 +29,14 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
       return (
         <span className="badge badge-error">
           <AlertCircle size={13} />
-          <span>Email hết hạn</span>
+          <span>{t('statusBadge.expired')}</span>
         </span>
       );
     }
     return (
       <span className="badge badge-info">
         <Mail size={13} />
-        <span>Đã gửi email</span>
+        <span>{t('statusBadge.sent')}</span>
       </span>
     );
   }
@@ -41,7 +44,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
   return (
     <span className="badge badge-neutral">
       <Clock size={13} />
-      <span>Chưa gửi email</span>
+      <span>{t('statusBadge.notSent')}</span>
     </span>
   );
 };

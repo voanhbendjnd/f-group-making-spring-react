@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export interface ModalProps {
   open: boolean;
@@ -18,6 +19,7 @@ export const Modal: React.FC<ModalProps> = ({
   footer,
   maxWidth = '560px',
 }) => {
+  const { t } = useTranslation();
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && open) {
@@ -66,7 +68,7 @@ export const Modal: React.FC<ModalProps> = ({
               display: 'flex',
               alignItems: 'center',
             }}
-            aria-label="Đóng cửa sổ"
+            aria-label={t('common.closeModal')}
           >
             <X size={20} />
           </button>

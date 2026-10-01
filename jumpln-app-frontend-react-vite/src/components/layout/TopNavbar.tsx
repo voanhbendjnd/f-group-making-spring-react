@@ -1,7 +1,9 @@
 import React from 'react';
 import { Menu, LogOut, User as UserIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/app/providers/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 
 export interface TopNavbarProps {
   onToggleSidebar?: () => void;
@@ -14,6 +16,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
 }) => {
   const { user, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleLogout = () => {
     logout();
@@ -40,8 +43,8 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               transition: 'all var(--transition-fast)',
               boxShadow: 'var(--shadow-xs)',
             }}
-            title={isSidebarCollapsed ? 'Mở thanh điều hướng bên trái' : 'Thu gọn thanh điều hướng bên trái'}
-            aria-label="Thu gọn hoặc mở rộng thanh điều hướng"
+            title={isSidebarCollapsed ? t('nav.toggleSidebarOpen') : t('nav.toggleSidebarCollapse')}
+            aria-label={t('nav.toggleSidebarOpen')}
           >
             <Menu size={20} />
           </button>
@@ -49,18 +52,16 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
 
         <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
           {isAdmin ? (
-            <span>
-              Hệ thống Quản lý Sinh viên & Xếp nhóm · <strong style={{ color: 'var(--color-text-main)' }}>Học kỳ Fall 2026</strong>
-            </span>
+            <span>{t('nav.adminSubtitle')}</span>
           ) : (
-            <span>
-              Cổng thông tin sinh viên · <strong style={{ color: 'var(--color-text-main)' }}>F-Group Making</strong>
-            </span>
+            <span>{t('nav.studentSubtitle')}</span>
           )}
         </div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <LanguageSwitcher size="sm" />
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
           <UserIcon size={16} style={{ color: 'var(--color-text-subtle)' }} />
           <span style={{ fontWeight: 600, color: 'var(--color-text-main)' }}>
@@ -75,7 +76,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           style={{ gap: '0.375rem' }}
         >
           <LogOut size={16} />
-          <span>Đăng xuất</span>
+          <span>{t('common.logout')}</span>
         </button>
       </div>
     </header>

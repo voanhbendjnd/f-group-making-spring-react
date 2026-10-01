@@ -1,5 +1,6 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export interface LoadingSpinnerProps {
   size?: number;
@@ -9,9 +10,12 @@ export interface LoadingSpinnerProps {
 
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 32,
-  message = 'Đang tải dữ liệu...',
+  message,
   fullPage = false,
 }) => {
+  const { t } = useTranslation();
+  const displayMessage = message ?? t('common.loading');
+
   const content = (
     <div
       style={{
@@ -25,7 +29,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       }}
     >
       <Loader2 size={size} className="animate-spin" style={{ color: 'var(--color-primary)' }} />
-      {message && <p style={{ fontSize: '0.9375rem', fontWeight: 500 }}>{message}</p>}
+      {displayMessage && <p style={{ fontSize: '0.9375rem', fontWeight: 500 }}>{displayMessage}</p>}
     </div>
   );
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'ghost' | 'outline';
@@ -18,6 +19,7 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props
 }) => {
+  const { t } = useTranslation();
   const sizeClass = size === 'sm' ? 'btn-sm' : size === 'lg' ? 'btn-lg' : '';
   const variantClass = `btn-${variant}`;
 
@@ -30,7 +32,7 @@ export const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <>
           <Loader2 size={size === 'sm' ? 14 : 18} className="animate-spin" />
-          <span>Đang xử lý...</span>
+          <span>{t('common.processing')}</span>
         </>
       ) : (
         <>
