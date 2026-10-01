@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class UserService {
+    private static final long ACTIVATION_KEY_VALIDITY_DAYS = 3;
+
     private final UserRepository userRepository;
     private final CacheManager cacheManager;
     private final PasswordEncoder passwordEncoder;
@@ -65,6 +67,9 @@ public class UserService {
         this.clearUserCaches(existingUser);
         return true;
     }
+    /*
+    * có mục đích là xóa bản User cũ trong cache, vì trước khi activate, User đó có thể đã được cache với trạng thái cũ.
+    * */
     private void clearUserCaches(User user){
         var cacheByEmail = cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE);
         if(cacheByEmail != null){
@@ -78,7 +83,7 @@ public class UserService {
      * */
     @Scheduled(cron = "0 0 1 * * ?")
     public void removeNotActivatedUsers(){
-        List<User> currentUsers = userRepository.findAllByActivatedIsFalseAndActivationKeyNotNullAndCreatedDateBefore(Instant.now().minus(3, ChronoUnit.DAYS));
+        List<User> currentUsers = userRepository.findAllByActivatedIsFalseAndActivationKeyNotNullAndLastModifiedDateBefore(Instant.now().minus(3, ChronoUnit.DAYS));
         List<Long> currentUserIds = currentUsers.stream().map(User::getId).toList();
         userRepository.deleteByIdIn(currentUserIds);
         currentUsers.forEach(this::clearUserCaches);
@@ -90,7 +95,7 @@ public class UserService {
         if(user.getActivated()){
             throw new AccessDeniedException("account");
         }
-        user.setActivationKey(RandomUtil.generateActivationKey());
+        assignNewActivationKey(user);
         userRepository.save(user);
         UserDTO dto = new UserDTO();
         dto.setEmail(normalizedEmail);
@@ -98,25 +103,186 @@ public class UserService {
         return dto;
     }
     public List<UserDTO> initActivateKeyMulAccount(List<Long> userIds){
-        List<User> currentUsers = userRepository.findByIdIn(userIds);
+        if (userIds == null || userIds.isEmpty() || userIds.stream().anyMatch(Objects::isNull)) {
+            throw new BadRequestResourceException(
+                    "User IDs must not be empty or contain null values",
+                    "userManagement",
+                    "invalidids"
+            );
+        }
+
+        List<Long> distinctUserIds = userIds.stream().distinct().toList();
+        List<User> currentUsers = userRepository.findByIdIn(distinctUserIds);
         Set<Long> userIdSet = currentUsers.stream().map(User::getId).collect(Collectors.toSet());
-        List <String> errorMessages = new ArrayList<>();
-        for(Long userId : userIds){
+        for(Long userId : distinctUserIds){
             if(!userIdSet.contains(userId)){
-                errorMessages.add(String.format("User with ID '%d' not found", userId));
+                throw new BadRequestResourceException(
+                        "One or more user IDs were not found",
+                        "userManagement",
+                        "idnotfound"
+                );
             }
         }
-        if(!errorMessages.isEmpty()){
-            throw new BadRequestResourceException(String.join("/n", errorMessages), "userManagement", "idnotfound");
+
+        List<User> usersPendingActivation = currentUsers.stream()
+                .filter(user -> Boolean.FALSE.equals(user.getActivated()))
+                .toList();
+
+        if (usersPendingActivation.isEmpty()) {
+            return List.of();
         }
-        List<UserDTO> res = new ArrayList<>();
-        for(User user : currentUsers){
+
+        List<UserDTO> res = new ArrayList<>(usersPendingActivation.size());
+        for(User user : usersPendingActivation){
+            assignNewActivationKey(user);
+
             UserDTO dto = new UserDTO();
             dto.setEmail(user.getEmail());
-            dto.setActivationKey(RandomUtil.generateActivationKey());
+            dto.setActivationKey(user.getActivationKey());
             res.add(dto);
         }
+
+        userRepository.saveAll(usersPendingActivation);
         return res;
     }
 
+    public void activateAccountAndSetPassword(String activationKey, String password) {
+        Instant now = Instant.now();
+        User user = userRepository.findOneByActivationKey(activationKey)
+                .filter(candidate -> Boolean.FALSE.equals(candidate.getActivated()))
+                .filter(candidate -> isActivationKeyValid(candidate, now))
+                .orElseThrow(() -> new BadRequestResourceException(
+                        "Activation key is invalid or expired",
+                        "userManagement",
+                        "invalidactivationkey"
+                ));
+
+        Authority studentAuthority = authorityRepository.findById(AuthoritiesConstants.STUDENT)
+                .orElseThrow(() -> new IllegalStateException("Student authority is not configured"));
+
+        user.setPassword(passwordEncoder.encode(password));
+        user.setActivated(true);
+        user.setActivationKey(null);
+        user.setActivationKeyExpiresAt(null);
+        user.getAuthorities().add(studentAuthority);
+        userRepository.save(user);
+        clearUserCaches(user);
+    }
+
+    public tech.djnd.sample.app.service.dto.ActivationKeyVerifyDTO verifyActivationKey(String activationKey) {
+        if (activationKey == null || activationKey.isBlank()) {
+            throw new BadRequestResourceException(
+                    "Activation key must not be blank",
+                    "userManagement",
+                    "invalidactivationkey"
+            );
+        }
+        Instant now = Instant.now();
+        User user = userRepository.findByActivationKey(activationKey)
+                .filter(candidate -> Boolean.FALSE.equals(candidate.getActivated()))
+                .filter(candidate -> isActivationKeyValid(candidate, now))
+                .orElseThrow(() -> new BadRequestResourceException(
+                        "Activation key is invalid or expired",
+                        "userManagement",
+                        "invalidactivationkey"
+                ));
+
+        return tech.djnd.sample.app.service.dto.ActivationKeyVerifyDTO.builder()
+                .valid(true)
+                .email(user.getEmail())
+                .name(user.getName())
+                .build();
+    }
+
+    public UserDTO initActivatedKeyAccountById(Long userId) {
+        if (userId == null) {
+            throw new BadRequestResourceException("User ID must not be null", "userManagement", "idnull");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BadRequestResourceException("User not found", "userManagement", "usernotfound"));
+
+        if (Boolean.TRUE.equals(user.getActivated())) {
+            throw new BadRequestResourceException("User is already activated", "userManagement", "alreadyactivated");
+        }
+
+        assignNewActivationKey(user);
+        userRepository.save(user);
+
+        UserDTO dto = new UserDTO();
+        dto.setEmail(user.getEmail());
+        dto.setActivationKey(user.getActivationKey());
+        return dto;
+    }
+
+    private void assignNewActivationKey(User user) {
+        user.setActivationKey(RandomUtil.generateActivationKey());
+        user.setActivationKeyExpiresAt(Instant.now().plus(ACTIVATION_KEY_VALIDITY_DAYS, ChronoUnit.DAYS));
+    }
+
+    private boolean isActivationKeyValid(User user, Instant now) {
+        Instant expiresAt = user.getActivationKeyExpiresAt();
+        if (expiresAt == null && user.getLastModifiedDate() != null) {
+            expiresAt = user.getLastModifiedDate().plus(ACTIVATION_KEY_VALIDITY_DAYS, ChronoUnit.DAYS);
+        }
+        return expiresAt != null && expiresAt.isAfter(now);
+    }
+
+
+    /*
+    * Required request with email for set password account
+    * */
+    public Optional<User> requestPasswordReset(String email){
+        String normalizedEmail = email.trim().toLowerCase(Locale.ENGLISH);
+//        User existingUser = userRepository.findOneByEmail(normalizedEmail)
+//                .orElseThrow(() -> new DataResourceNotFoundException(String.format("User with email '%s' not found", normalizedEmail), "userManagement", "usernotfound"));
+//        if(!existingUser.getActivated()){
+//            throw new AccessDeniedException(String.format("User with email '%s' is not activated", normalizedEmail));
+//        }
+//        existingUser.setResetKey(RandomUtil.generateResetKey());
+//        existingUser.setResetDate(Instant.now());
+//        userRepository.save(existingUser);
+//        this.clearUserCaches(existingUser);
+//        UserDTO dto = new UserDTO();
+//        dto.setEmail(existingUser.getEmail());
+//        dto.setResetKey(existingUser.getResetKey());
+//        return dto;
+        return userRepository.findOneByEmail(normalizedEmail)
+                .filter(User::getActivated)
+                .map(user ->{
+                    user.setResetKey(RandomUtil.generateResetKey());
+                    user.setResetDate(Instant.now());
+                    this.clearUserCaches(user);
+                    return user;
+                });
+    }
+    /*
+    * Can update new password with a day
+    * */
+    public Optional<User> completePasswordReset(String newPassword, String resetKey) {
+//        User userExisting = userRepository.findOneByResetKey(resetKey)
+//                .orElseThrow(() -> new DataResourceNotFoundException("ResetKey not found", "userManagement", "usernotfound"));
+//        if(!userExisting.getActivated()){
+//            throw new AccessDeniedException("account not activate");
+//        }
+//        if(userExisting.getResetDate().isBefore(Instant.now().minus(1, ChronoUnit.DAYS))){
+//            throw new AccessDeniedException("account has expired update password");
+//        }
+//        userExisting.setPassword(passwordEncoder.encode(newPassword));
+//        userExisting.setResetKey(null);
+//        userExisting.setResetDate(null);
+//        userRepository.save(userExisting);
+//        this.clearUserCaches(userExisting);
+//        UserDTO dto = new UserDTO();
+//        dto.setEmail(userExisting.getEmail());
+//        return dto;
+        return userRepository.findOneByResetKey(resetKey)
+                .filter(user -> user.getResetDate().isAfter(Instant.now().minus(1, ChronoUnit.DAYS)))
+                .map(user ->{
+                    user.setPassword(passwordEncoder.encode(newPassword));
+                    user.setResetKey(null);
+                    user.setResetDate(null);
+                    this.clearUserCaches(user);
+                    return user;
+                });
+    }
 }

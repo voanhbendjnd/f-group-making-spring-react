@@ -1,42 +1,55 @@
 package tech.djnd.sample.app.web.rest;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
+import lombok.extern.slf4j.Slf4j;
+import net.logstash.logback.util.StringUtils;
 import org.apache.hc.core5.http.HttpHeaders;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import tech.djnd.sample.app.domain.User;
+import tech.djnd.sample.app.security.AuthoritiesConstants;
 import tech.djnd.sample.app.security.CustomUserDetails;
 import tech.djnd.sample.app.service.AuthService;
 import tech.djnd.sample.app.service.MailService;
 import tech.djnd.sample.app.service.NotificationAsyncService;
 import tech.djnd.sample.app.service.UserService;
+import tech.djnd.sample.app.service.dto.ActivationKeyVerifyDTO;
+import tech.djnd.sample.app.service.dto.BatchActivationResultDTO;
 import tech.djnd.sample.app.service.dto.ResLoginDTO;
 import tech.djnd.sample.app.service.dto.UserDTO;
 import tech.djnd.sample.app.service.errors.BadRequestResourceException;
-import tech.djnd.sample.app.web.rest.vm.LoginVM;
-import tech.djnd.sample.app.web.rest.vm.MulUserId;
+import tech.djnd.sample.app.service.errors.DataResourceNotFoundException;
+import tech.djnd.sample.app.util.anotation.ApiMessage;
+import tech.djnd.sample.app.web.rest.vm.*;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
+@Slf4j
 @RequestMapping("/api")
 public class AccountResource {
     private final UserService userService;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final AuthService authService;
     private final MailService mailService;
+    private final PasswordEncoder passwordEncoder;
     @Value("${djnd.jwt.refresh-token-validity-in-seconds}")
-    private  Long refreshTokenExpiration;
+    private Long refreshTokenExpiration;
     private final NotificationAsyncService notificationAsyncService;
 
     public AccountResource(
@@ -44,25 +57,27 @@ public class AccountResource {
             AuthenticationManagerBuilder authenticationManagerBuilder,
             AuthService authService,
             MailService mailService,
-            NotificationAsyncService notificationAsyncService
-                           ){
+            NotificationAsyncService notificationAsyncService,
+            PasswordEncoder passwordEncoder
+    ) {
         this.userService = userService;
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.notificationAsyncService = notificationAsyncService;
         this.mailService = mailService;
         this.authService = authService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /*
-    * vm: username, password
-    * */
+     * vm: username, password
+     */
     @PostMapping("/login")
     public ResponseEntity<ResLoginDTO> loginWithEmail(@Valid @RequestBody LoginVM vm) {
         String normalizedEmail = vm.getUsername().trim().toLowerCase(Locale.ENGLISH);
         // check password
         UsernamePasswordAuthenticationToken userToken = new UsernamePasswordAuthenticationToken(normalizedEmail, vm.getPassword());
 
-        try{
+        try {
             Authentication authentication = authenticationManagerBuilder.getObject().authenticate(userToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
@@ -77,26 +92,92 @@ public class AccountResource {
                     .build();
             res.setRefreshToken(null);
             return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(res);
-        }
-        catch(BadCredentialsException ex){
+        } catch (BadCredentialsException ex) {
             throw new tech.djnd.sample.app.web.rest.errors.BadCredentialsException();
         }
     }
+
     @PostMapping("/activate")
     @ResponseStatus(HttpStatus.OK)
-    public void sendRequestActivateAccount(@RequestBody Map<String, String> mp) {
-        String email = mp.get("email");
-        if(email == null || email.isBlank()){
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @ApiMessage("Activation email request accepted successfully")
+    public void sendRequestActivateAccount(@RequestBody(required = false) Map<String, Object> mp) {
+        String email = mp == null ? null : (mp.get("email") != null ? mp.get("email").toString() : null);
+        Object rawUserId = mp == null ? null : (mp.containsKey("userId") ? mp.get("userId") : mp.get("id"));
+
+        UserDTO dto;
+        if (rawUserId != null) {
+            Long userId = rawUserId instanceof Number ? ((Number) rawUserId).longValue() : Long.parseLong(rawUserId.toString());
+            dto = userService.initActivatedKeyAccountById(userId);
+        } else if (email != null && !email.isBlank()) {
+            dto = userService.initActivatedKeyAccount(email);
+        } else {
             throw new BadRequestResourceException("Email not found", "userManagement", "emailnotfound");
         }
-        UserDTO dto =  userService.initActivatedKeyAccount(email);
         mailService.sendActivationEmail(dto);
     }
 
     @PostMapping("/activate/mul")
     @ResponseStatus(HttpStatus.OK)
-    public void sendMulRequestActivateAccount(@RequestBody MulUserId mulUserId){
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @ApiMessage("Batch activation request accepted successfully")
+    public ResponseEntity<BatchActivationResultDTO> sendMulRequestActivateAccount(@Valid @RequestBody MulUserId mulUserId) {
         List<Long> userIds = mulUserId.getUserIds();
-        notificationAsyncService.sendMailActivatedAccount(userService.initActivateKeyMulAccount(userIds));
+        List<Long> distinctUserIds = userIds.stream().distinct().toList();
+        List<UserDTO> usersToActivate = userService.initActivateKeyMulAccount(distinctUserIds);
+        notificationAsyncService.sendMailActivatedAccount(usersToActivate);
+
+        BatchActivationResultDTO result = BatchActivationResultDTO.builder()
+                .totalRequested(distinctUserIds.size())
+                .totalProcessed(usersToActivate.size())
+                .totalSkippedAlreadyActive(distinctUserIds.size() - usersToActivate.size())
+                .sentEmails(usersToActivate.stream().map(UserDTO::getEmail).toList())
+                .build();
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/account/activate/verify")
+    @ApiMessage("Activation key verified successfully")
+    public ResponseEntity<ActivationKeyVerifyDTO> verifyActivationKey(@RequestParam("key") String key) {
+        ActivationKeyVerifyDTO result = userService.verifyActivationKey(key);
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/account/activate")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void activateAccount(@Valid @RequestBody ActivateAccountVM vm) {
+        userService.activateAccountAndSetPassword(vm.getKey(), vm.getPassword());
+    }
+
+    @PostMapping(path = "/account/reset-password/init")
+    public void requestPasswordReset(@RequestBody @Email @Size(min = 5, max = 255) String email) {
+        Optional<User> userExisting = userService.requestPasswordReset(email);
+        if(userExisting.isPresent()){
+            UserDTO dto = new  UserDTO();
+            dto.setResetKey(userExisting.get().getResetKey());
+            dto.setEmail(userExisting.get().getEmail());
+            mailService.sendPasswordResetMail(dto);
+        }
+        else{
+            log.info("Password reset requested for non existing mail");
+        }
+    }
+    @PostMapping(path = "/account/reset-password/finish")
+    public void finishPasswordReset(@RequestBody KeyAndPasswordVM vm) {
+        if(isPasswordLengthInvalid(vm.getNewPassword())){
+            throw new BadRequestResourceException("Password length is invalid", "userManagement", "passwordlengthinvalid");
+        }
+        Optional<User> user = userService.completePasswordReset(vm.getNewPassword(), vm.getResetKey());
+        if(user.isEmpty()){
+            passwordEncoder.encode(vm.getNewPassword());
+            throw new DataResourceNotFoundException("No user was found for this reset key", "userManagement", "usernotfound");
+        }
+    }
+    private static boolean isPasswordLengthInvalid(String password) {
+        return (
+                StringUtils.isEmpty(password) ||
+                        password.length() < ManagedUserVM.PASSWORD_MIN_LENGTH ||
+                        password.length() > ManagedUserVM.PASSWORD_MAX_LENGTH
+        );
     }
 }
