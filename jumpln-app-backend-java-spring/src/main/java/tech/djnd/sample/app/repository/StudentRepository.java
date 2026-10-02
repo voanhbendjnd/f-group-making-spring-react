@@ -19,12 +19,12 @@ public interface StudentRepository extends JpaRepository<Student, Long>, JpaSpec
 
 
     @Query(value = """
-        select s.userId as userId, s.rollNumber as rollNumber, u.name as fullName,
-               s.majorCode as majorCode, s.majorId as majorId,
-               s.memberCode as memberCode, u.activated as activated, u.activationKeyExpiresAt as activationKeyExpiresAt,
-               u.createdDate as createDate, u.lastModifiedDate as lastModifiedDate
+        select new tech.djnd.sample.app.service.projection.StudentRow(
+            s.userId, s.rollNumber, s.fullName, u.email, s.memberCode, s.majorId, s.majorCode,
+            u.activated, u.activationKey, u.activationKeyExpiresAt, u.createdDate, u.lastModifiedDate
+        )
         from Student s
-        join User u
+        join User u on s.userId = u.id
         where s.userId = :userId
     """)
     Optional<StudentRow> findStudentProjectionById(@Param("userId") Long userId);

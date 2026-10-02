@@ -174,6 +174,7 @@ public class StudentService {
                 .userId(row.userId())
                 .rollNumber(row.rollNumber())
                 .fullName(row.fullName())
+                .email(row.email())
                 .memberCode(row.memberCode())
                 .majorId(row.majorId())
                 .majorCode(row.majorCode())

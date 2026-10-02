@@ -48,6 +48,7 @@ public class StudentQueryRepository {
                 root.get("userId"),
                 root.get("rollNumber"),
                 root.get("fullName"),
+                user.get("email"),
                 root.get("memberCode"),
                 root.get("majorId"),
                 root.get("majorCode"),
