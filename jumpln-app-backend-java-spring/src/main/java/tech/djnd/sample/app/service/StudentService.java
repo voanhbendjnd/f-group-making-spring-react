@@ -16,13 +16,11 @@ import org.springframework.web.multipart.MultipartFile;
 import tech.djnd.sample.app.domain.Major;
 import tech.djnd.sample.app.domain.Student;
 import tech.djnd.sample.app.domain.User;
-import tech.djnd.sample.app.repository.MajorRepository;
-import tech.djnd.sample.app.repository.StudentRepository;
-import tech.djnd.sample.app.repository.StudentSpecifications;
-import tech.djnd.sample.app.repository.UserRepository;
+import tech.djnd.sample.app.repository.*;
 import tech.djnd.sample.app.service.dto.*;
 import tech.djnd.sample.app.service.errors.BadRequestResourceException;
 import tech.djnd.sample.app.service.errors.ExcelImportException;
+import tech.djnd.sample.app.service.projection.StudentRow;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -45,7 +43,7 @@ public class StudentService {
     private static final int COL_MAJOR       = 3;   // Column D: Major (BEN_CHN_ET_19C,...)
     private static final int COL_MEMBER_CODE = 4;   // Column E: Member code
     private static final int COL_EMAIL       = 5;   // Column F: Email
-
+    private final StudentQueryRepository studentQueryRepository;
     private final StudentRepository studentRepository;
     private final MajorRepository majorRepository;
     private final UserRepository userRepository;
@@ -57,18 +55,17 @@ public class StudentService {
             MajorRepository majorRepository,
             UserRepository userRepository,
             UserService userService,
-            NotificationAsyncService notificationAsyncService
+            NotificationAsyncService notificationAsyncService,
+            StudentQueryRepository studentQueryRepository
     ) {
         this.studentRepository = studentRepository;
         this.majorRepository = majorRepository;
         this.userRepository = userRepository;
         this.userService = userService;
+        this.studentQueryRepository = studentQueryRepository;
         this.notificationAsyncService = notificationAsyncService;
     }
 
-    // =========================================================================
-    // PUBLIC API
-    // =========================================================================
 
     /**
      * Import student list from Excel file (.xlsx).
@@ -102,11 +99,11 @@ public class StudentService {
         }
 
         // Step 5: Map DTO → Entity and persist to database
-        List<Student> students = mapToEntities(rows);
+        List<StudentDTO> studentDTOs = mapToEntities(rows);
 
         // Create user accounts before creating student records
         List<User> userStudents = new ArrayList<>();
-        students.forEach(student -> {
+        studentDTOs.forEach(student -> {
             User user = new User();
             user.setEmail(student.getEmail());
             user.setName(student.getFullName());
@@ -114,33 +111,42 @@ public class StudentService {
         });
         Map<String, Long> userStudentMap = userRepository.saveAll(userStudents).stream()
                 .collect(Collectors.toMap(User::getEmail, User::getId));
-        students.forEach(student -> {
+        studentDTOs.forEach(student -> {
             Long userId = userStudentMap.get(student.getEmail());
             student.setUserId(userId);
         });
-        studentRepository.saveAll(students);
 
-        log.info("Import completed successfully: {} student(s) saved", students.size());
+
+        studentRepository.saveAll(studentDTOs.stream().map(this::toEntity).toList());
+
+        log.info("Import completed successfully: {} student(s) saved", studentDTOs.size());
         return ImportResultDTO.builder()
                 .success(true)
-                .totalImported(students.size())
+                .totalImported(studentDTOs.size())
                 .errors(List.of())
                 .build();
     }
 
-    /**
-     * Get paginated and filtered list of students.
-     */
+    private Student toEntity(StudentDTO dto){
+        Student student = new Student();
+        student.setUserId(dto.getUserId());
+        student.setRollNumber(dto.getRollNumber());
+        student.setFullName(dto.getFullName());
+//        student.setEmail(dto.getEmail());
+        student.setMemberCode(dto.getMemberCode());
+        student.setMajorId(dto.getMajorId());
+        student.setMajorCode(dto.getMajorCode());
+        return student;
+    }
+
     @Transactional(readOnly = true)
     public ResultPaginationDTO getStudents(
-            String search,
-            String majorCode,
-            Boolean activated,
-            Boolean hasActivationKey,
-            Pageable pageable
-    ) {
-        Specification<Student> spec = StudentSpecifications.withFilter(search, majorCode, activated, hasActivationKey);
-        Page<Student> page = studentRepository.findAll(spec, pageable);
+            String search, String majorCode, Boolean activated,
+            Boolean hasActivationKey, Pageable pageable) {
+
+        Specification<Student> spec =
+                StudentSpecifications.withFilter(search, majorCode, activated, hasActivationKey);
+        Page<StudentRow> page = studentQueryRepository.search(spec, pageable);
 
         List<StudentDTO> studentDTOs = page.getContent().stream()
                 .map(this::toDTO)
@@ -159,12 +165,33 @@ public class StudentService {
                 .build();
     }
 
+    private StudentDTO toDTO(StudentRow row) {
+        boolean hasKey = row.activationKey() != null;
+        boolean expired = row.activationKeyExpiresAt() != null
+                && row.activationKeyExpiresAt().isBefore(Instant.now());
+
+        return StudentDTO.builder()
+                .userId(row.userId())
+                .rollNumber(row.rollNumber())
+                .fullName(row.fullName())
+                .memberCode(row.memberCode())
+                .majorId(row.majorId())
+                .majorCode(row.majorCode())
+                .activated(Boolean.TRUE.equals(row.activated()))
+                .hasActivationKey(hasKey)
+                .activationKeyExpiresAt(row.activationKeyExpiresAt())
+                .isKeyExpired(expired)
+                .createdDate(row.createdDate())
+                .lastModifiedDate(row.lastModifiedDate())
+                .build();
+    }
+
     /**
      * Get student details by userId.
      */
     @Transactional(readOnly = true)
     public StudentDTO getStudentByUserId(Long userId) {
-        Student student = studentRepository.findById(userId)
+        StudentRow student = studentRepository.findStudentProjectionById(userId)
                 .orElseThrow(() -> new BadRequestResourceException(
                         "Student not found with ID: " + userId,
                         "studentManagement",
@@ -206,35 +233,35 @@ public class StudentService {
                 .build();
     }
 
-    private StudentDTO toDTO(Student student) {
-        StudentDTO dto = StudentDTO.builder()
-                .userId(student.getUserId())
-                .rollNumber(student.getRollNumber())
-                .fullName(student.getFullName())
-                .email(student.getEmail())
-                .memberCode(student.getMemberCode())
-                .majorId(student.getMajorId())
-                .majorCode(student.getMajorCode())
-                .build();
-
-        if (student.getUser() != null) {
-            User user = student.getUser();
-            dto.setActivated(user.getActivated());
-            boolean hasKey = user.getActivationKey() != null;
-            dto.setHasActivationKey(hasKey);
-            dto.setActivationKeyExpiresAt(user.getActivationKeyExpiresAt());
-            boolean isExpired = user.getActivationKeyExpiresAt() != null
-                    && user.getActivationKeyExpiresAt().isBefore(Instant.now());
-            dto.setIsKeyExpired(isExpired);
-            dto.setCreatedDate(user.getCreatedDate());
-            dto.setLastModifiedDate(user.getLastModifiedDate());
-        } else {
-            dto.setActivated(false);
-            dto.setHasActivationKey(false);
-            dto.setIsKeyExpired(false);
-        }
-        return dto;
-    }
+//    private StudentDTO toDTO(Student student) {
+//        StudentDTO dto = StudentDTO.builder()
+//                .userId(student.getUserId())
+//                .rollNumber(student.getRollNumber())
+//                .fullName(student.getFullName())
+////                .email(student.getEmail())
+//                .memberCode(student.getMemberCode())
+//                .majorId(student.getMajorId())
+//                .majorCode(student.getMajorCode())
+//                .build();
+//
+//        if (student.getUser() != null) {
+//            User user = student.getUser();
+//            dto.setActivated(user.getActivated());
+//            boolean hasKey = user.getActivationKey() != null;
+//            dto.setHasActivationKey(hasKey);
+//            dto.setActivationKeyExpiresAt(user.getActivationKeyExpiresAt());
+//            boolean isExpired = user.getActivationKeyExpiresAt() != null
+//                    && user.getActivationKeyExpiresAt().isBefore(Instant.now());
+//            dto.setIsKeyExpired(isExpired);
+//            dto.setCreatedDate(user.getCreatedDate());
+//            dto.setLastModifiedDate(user.getLastModifiedDate());
+//        } else {
+//            dto.setActivated(false);
+//            dto.setHasActivationKey(false);
+//            dto.setIsKeyExpired(false);
+//        }
+//        return dto;
+//    }
 
     // =========================================================================
     // PRIVATE METHODS
@@ -327,10 +354,10 @@ public class StudentService {
                 .stream()
                 .map(Student::getMemberCode)
                 .collect(Collectors.toSet());
-        Set<String> existingEmails = studentRepository
+        Set<String> existingEmails = userRepository
                 .findByEmailIn(emailsInFile)
                 .stream()
-                .map(Student::getEmail)
+                .map(User::getEmail)
                 .collect(Collectors.toSet());
 
         Map<String, Major> majorsByCode = majorRepository.findAll()
@@ -517,14 +544,14 @@ public class StudentService {
     /**
      * Map validated DTO list to Student entity list.
      */
-    private List<Student> mapToEntities(List<StudentImportRowDTO> rows) {
+    private List<StudentDTO> mapToEntities(List<StudentImportRowDTO> rows) {
         Map<String, Major> majorsByCode = majorRepository.findAll()
                 .stream()
                 .collect(Collectors.toMap(Major::getCode, m -> m));
 
         return rows.stream().map(row -> {
             Major major = majorsByCode.get(row.getMajorCode());
-            Student student = new Student();
+            StudentDTO student = new StudentDTO();
             student.setRollNumber(row.getRollNumber());
             student.setFullName(row.getFullName());
             student.setEmail(row.getEmail());

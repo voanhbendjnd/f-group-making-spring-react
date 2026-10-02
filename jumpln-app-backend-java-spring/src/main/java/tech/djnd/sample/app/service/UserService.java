@@ -280,6 +280,7 @@ public class UserService {
                 .filter(User::getActivated)
                 .filter(user -> {
                     // Cooldown: prevent email flooding if requested within the last 60 seconds
+                    // rate limit
                     if (user.getResetDate() != null && user.getResetDate().isAfter(Instant.now().minus(60, ChronoUnit.SECONDS))) {
                         return false;
                     }
@@ -306,7 +307,7 @@ public class UserService {
                     user.setPassword(passwordEncoder.encode(newPassword));
                     user.setResetKey(null);
                     user.setResetDate(null);
-                    user.setSessionId(UUID.randomUUID().toString());
+                    user.setSessionId(null);
                     user.setRefreshToken(null);
                     userRepository.save(user);
                     this.clearUserCaches(user);

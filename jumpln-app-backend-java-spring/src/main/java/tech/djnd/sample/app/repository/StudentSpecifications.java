@@ -3,6 +3,7 @@ package tech.djnd.sample.app.repository;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
 import tech.djnd.sample.app.domain.Student;
 import tech.djnd.sample.app.domain.User;
@@ -17,42 +18,39 @@ public final class StudentSpecifications {
     }
 
     public static Specification<Student> withFilter(
-            String search,
-            String majorCode,
-            Boolean activated,
-            Boolean hasActivationKey
-    ) {
+            String search, String majorCode, Boolean activated, Boolean hasActivationKey) {
+
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // Avoid N+1 on select queries by fetch joining user
-            if (query != null && Long.class != query.getResultType() && long.class != query.getResultType()) {
+            // chỉ fetch khi query trả về entity Student (tránh N+1)
+            if (query != null && Student.class.equals(query.getResultType())) {
                 root.fetch("user", JoinType.LEFT);
             }
 
             if (search != null && !search.isBlank()) {
                 String pattern = "%" + search.trim().toLowerCase() + "%";
-                Predicate rollNumber = cb.like(cb.lower(root.get("rollNumber")), pattern);
-                Predicate fullName = cb.like(cb.lower(root.get("fullName")), pattern);
-                Predicate email = cb.like(cb.lower(root.get("email")), pattern);
-                Predicate memberCode = cb.like(cb.lower(root.get("memberCode")), pattern);
-                predicates.add(cb.or(rollNumber, fullName, email, memberCode));
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("rollNumber")), pattern),
+                        cb.like(cb.lower(root.get("fullName")), pattern),
+                        cb.like(cb.lower(root.get("memberCode")), pattern)
+                ));
             }
 
             if (majorCode != null && !majorCode.isBlank()) {
-                predicates.add(cb.like(cb.lower(root.get("majorCode")), "%" + majorCode.trim().toLowerCase() + "%"));
+                predicates.add(cb.like(cb.lower(root.get("majorCode")),
+                        "%" + majorCode.trim().toLowerCase() + "%"));
             }
 
             if (activated != null || hasActivationKey != null) {
-                Join<Student, User> userJoin = root.join("user", JoinType.LEFT);
-
+                Join<Student, User> userJoin = getUserJoin(root);
                 if (activated != null) {
                     predicates.add(cb.equal(userJoin.get("activated"), activated));
                 }
 
                 if (hasActivationKey != null) {
                     Instant now = Instant.now();
-                    if (Boolean.TRUE.equals(hasActivationKey)) {
+                    if (hasActivationKey) {
                         predicates.add(cb.isNotNull(userJoin.get("activationKey")));
                         predicates.add(cb.greaterThan(userJoin.get("activationKeyExpiresAt"), now));
                     } else {
@@ -61,10 +59,18 @@ public final class StudentSpecifications {
                                 cb.lessThanOrEqualTo(userJoin.get("activationKeyExpiresAt"), now)
                         ));
                     }
-                }
-            }
+                }            }
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Join<Student, User> getUserJoin(Root<Student> root) {
+        return root.getJoins().stream()
+                .filter(j -> "user".equals(j.getAttribute().getName()))
+                .map(j -> (Join<Student, User>) j)
+                .findFirst()
+                .orElseGet(() -> root.join("user", JoinType.LEFT));
     }
 }

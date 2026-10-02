@@ -62,11 +62,18 @@ public class DatabaseInitializer implements CommandLineRunner {
             userRepository.save(admin);
             User admin2 = new User();
             admin2.setName("Djnd");
-            admin2.setActivated(false);
-            admin2.setEmail("voanhbendjnd@gmail.com");
+            admin2.setActivated(true);
+            admin2.setEmail("benva.ce190709@gmail.com");
             admin2.setPassword(passwordEncoder.encode("123123"));
             admin2.setAuthorities(authorities);
             userRepository.save(admin2);
+            User admin3 = new User();
+            admin3.setName("Trang");
+            admin3.setActivated(true);
+            admin3.setEmail("trangtttce191027@gmail.com");
+            admin3.setPassword(passwordEncoder.encode("123123"));
+            admin3.setAuthorities(authorities);
+            userRepository.save(admin3);
         }
 
         // Seed Major data — chỉ insert nếu chưa có dữ liệu
@@ -79,13 +86,7 @@ public class DatabaseInitializer implements CommandLineRunner {
         }
     }
 
-    /**
-     * Khởi tạo dữ liệu ngành học (Major) vào DB nếu chưa tồn tại.
-     * Major được seed tại đây để StudentService có thể lookup khi import Excel.
-     *
-     * <p>Danh sách Major tương ứng với các mã ngành xuất hiện trong file Excel
-     * (token thứ 2 khi split originalMajor theo "_", ví dụ: BEN_<b>CHN</b>_ET_19C).</p>
-     */
+
     private void initMajors() {
         if (majorRepository.count() > 0) {
             log.info("Majors already initialized, skipping...");

@@ -178,6 +178,7 @@ public class AccountResource {
         }
         Optional<User> user = userService.completePasswordReset(vm.getNewPassword(), vm.getResetKey());
         if (user.isEmpty()) {
+            // handle attack time
             passwordEncoder.encode(vm.getNewPassword());
             throw new BadRequestResourceException("Reset key is invalid or expired", "userManagement", "resetkeyinvalidorexpired");
         }

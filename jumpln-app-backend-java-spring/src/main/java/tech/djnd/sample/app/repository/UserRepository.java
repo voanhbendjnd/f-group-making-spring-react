@@ -50,4 +50,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 
     List<User> findByIdIn(List<Long> userIds);
+
+    List<User> findByEmailIn(List<String> emails);
+
 }

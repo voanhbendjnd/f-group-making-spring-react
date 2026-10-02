@@ -31,11 +31,11 @@ public class Student{
     @NotNull
     @Column(name = "member_code", nullable = false)
     String memberCode;
-    @NotNull
-    @Column(name = "email", nullable = false)
-    String email;
+//    @NotNull
+//    @Column(name = "email", nullable = false)
+//    String email;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    User user;
+//    @OneToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+//    User user;
 }
