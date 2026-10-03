@@ -31,6 +31,10 @@ public class Student{
     @NotNull
     @Column(name = "member_code", nullable = false)
     String memberCode;
+    @Column(name = "school_class_id")
+    Integer schoolClassId;
+    @Column(name = "group_id")
+    Long groupId;
 //    @NotNull
 //    @Column(name = "email", nullable = false)
 //    String email;
