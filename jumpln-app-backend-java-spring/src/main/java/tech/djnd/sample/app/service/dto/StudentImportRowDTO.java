@@ -1,44 +1,38 @@
 package tech.djnd.sample.app.service.dto;
 
-import lombok.AccessLevel;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.FieldDefaults;
 
-/**
- * DTO đại diện cho một dòng dữ liệu được parse từ file Excel.
- * Được dùng nội bộ trong quá trình validate và import.
- */
+
 @Builder
 @AllArgsConstructor
 public class StudentImportRowDTO {
 
-    /** Số thứ tự dòng trong file Excel (bắt đầu từ 2, dòng 1 là header) */
     private int rowIndex;
-
-    /** Mã sinh viên, ví dụ: CE190001 */
+    @NotBlank(message = "Roll number student not found")
     private String rollNumber;
-
-    /** Họ tên đầy đủ của sinh viên */
+    @NotBlank(message = "Name student not found")
    private String fullName;
 
-    /**
-     * Ngành gốc từ file Excel, ví dụ: BEN_CHN_ET_19C.
-     * Đây là giá trị thô chưa qua xử lý.
-     */
+    @NotBlank(message = "Major code student not found")
     private String originalMajor;
 
-    /**
-     * Mã ngành được parse từ originalMajor (token thứ 2 sau "_").
-     * Ví dụ: BEN_CHN_ET_19C → CHN
-     */
     private String majorCode;
-
+    @NotBlank(message = "Member code student not found")
     private String memberCode;
+    @NotBlank(message = "Email student not found")
     private String email;
+    @NotBlank(message = "Lecturer code not found")
+    private String lecturerCode;
+
+    public String getLecturerCode() {
+        return lecturerCode;
+    }
+
+    public void setLecturerCode(String lecturerCode) {
+        this.lecturerCode = lecturerCode;
+    }
 
     public int getRowIndex() {
         return rowIndex;

@@ -30,4 +30,5 @@ public class StudentDTO {
     Boolean isKeyExpired;
     Instant createdDate;
     Instant lastModifiedDate;
+    String lecturerCode;
 }

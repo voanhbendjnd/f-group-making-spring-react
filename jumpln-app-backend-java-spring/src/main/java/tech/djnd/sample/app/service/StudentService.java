@@ -13,6 +13,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import tech.djnd.sample.app.domain.Lecturer;
 import tech.djnd.sample.app.domain.Major;
 import tech.djnd.sample.app.domain.Student;
 import tech.djnd.sample.app.domain.User;
@@ -43,11 +44,13 @@ public class StudentService {
     private static final int COL_MAJOR       = 3;   // Column D: Major (BEN_CHN_ET_19C,...)
     private static final int COL_MEMBER_CODE = 4;   // Column E: Member code
     private static final int COL_EMAIL       = 5;   // Column F: Email
+    private static final int COL_LECTURER_CODE = 9;
     private final StudentQueryRepository studentQueryRepository;
     private final StudentRepository studentRepository;
     private final MajorRepository majorRepository;
     private final UserRepository userRepository;
     private final UserService userService;
+    private final LecturerRepository lecturerRepository;
     private final NotificationAsyncService notificationAsyncService;
 
     public StudentService(
@@ -56,7 +59,8 @@ public class StudentService {
             UserRepository userRepository,
             UserService userService,
             NotificationAsyncService notificationAsyncService,
-            StudentQueryRepository studentQueryRepository
+            StudentQueryRepository studentQueryRepository,
+            LecturerRepository lecturerRepository
     ) {
         this.studentRepository = studentRepository;
         this.majorRepository = majorRepository;
@@ -64,6 +68,7 @@ public class StudentService {
         this.userService = userService;
         this.studentQueryRepository = studentQueryRepository;
         this.notificationAsyncService = notificationAsyncService;
+        this.lecturerRepository = lecturerRepository;
     }
 
 
@@ -100,7 +105,10 @@ public class StudentService {
 
         // Step 5: Map DTO → Entity and persist to database
         List<StudentDTO> studentDTOs = mapToEntities(rows);
-
+        Set<String> lecturerCodes = studentDTOs.stream().map(StudentDTO::getLecturerCode).collect(Collectors.toSet());
+        for(String lecturerCode : lecturerCodes) {
+            System.out.println("Lecturer code from set: " + lecturerCode);
+        }
         // Create user accounts before creating student records
         List<User> userStudents = new ArrayList<>();
         studentDTOs.forEach(student -> {
@@ -234,35 +242,6 @@ public class StudentService {
                 .build();
     }
 
-//    private StudentDTO toDTO(Student student) {
-//        StudentDTO dto = StudentDTO.builder()
-//                .userId(student.getUserId())
-//                .rollNumber(student.getRollNumber())
-//                .fullName(student.getFullName())
-////                .email(student.getEmail())
-//                .memberCode(student.getMemberCode())
-//                .majorId(student.getMajorId())
-//                .majorCode(student.getMajorCode())
-//                .build();
-//
-//        if (student.getUser() != null) {
-//            User user = student.getUser();
-//            dto.setActivated(user.getActivated());
-//            boolean hasKey = user.getActivationKey() != null;
-//            dto.setHasActivationKey(hasKey);
-//            dto.setActivationKeyExpiresAt(user.getActivationKeyExpiresAt());
-//            boolean isExpired = user.getActivationKeyExpiresAt() != null
-//                    && user.getActivationKeyExpiresAt().isBefore(Instant.now());
-//            dto.setIsKeyExpired(isExpired);
-//            dto.setCreatedDate(user.getCreatedDate());
-//            dto.setLastModifiedDate(user.getLastModifiedDate());
-//        } else {
-//            dto.setActivated(false);
-//            dto.setHasActivationKey(false);
-//            dto.setIsKeyExpired(false);
-//        }
-//        return dto;
-//    }
 
     // =========================================================================
     // PRIVATE METHODS
@@ -308,6 +287,8 @@ public class StudentService {
                 String memberCode    = getCellValueAsString(row, COL_MEMBER_CODE).trim();
                 String email         = getCellValueAsString(row, COL_EMAIL).trim().toLowerCase(Locale.ENGLISH);
                 String majorCode     = parseMajorCode(originalMajor);
+                String lecturerCode = getCellValueAsString(row, COL_LECTURER_CODE).trim();
+
 
                 rows.add(StudentImportRowDTO.builder()
                         .rowIndex(row.getRowNum() + 1)
@@ -317,6 +298,7 @@ public class StudentService {
                         .memberCode(memberCode)
                         .originalMajor(originalMajor)
                         .majorCode(majorCode)
+                        .lecturerCode(lecturerCode)
                         .build());
             }
         } catch (IOException e) {
@@ -331,7 +313,6 @@ public class StudentService {
      */
     private List<ImportRowErrorDTO> validateRows(List<StudentImportRowDTO> rows) {
         List<ImportRowErrorDTO> errors = new ArrayList<>();
-
         List<String> rollNumbersInFile = rows.stream()
                 .map(StudentImportRowDTO::getRollNumber)
                 .filter(r -> r != null && !r.isBlank())
@@ -388,7 +369,7 @@ public class StudentService {
             Map<String, Integer> seenMemberCodes,
             Map<String, Integer> seenEmails,
             List<ImportRowErrorDTO> errors) {
-
+        // lecturer code skip -> cause if exist not add to db
         // Rule 1: rollNumber must not be empty
         if (row.getRollNumber() == null || row.getRollNumber().isBlank()) {
             errors.add(ImportRowErrorDTO.builder()
@@ -549,7 +530,6 @@ public class StudentService {
         Map<String, Major> majorsByCode = majorRepository.findAll()
                 .stream()
                 .collect(Collectors.toMap(Major::getCode, m -> m));
-
         return rows.stream().map(row -> {
             Major major = majorsByCode.get(row.getMajorCode());
             StudentDTO student = new StudentDTO();
@@ -559,6 +539,7 @@ public class StudentService {
             student.setMemberCode(row.getMemberCode());
             student.setMajorId(major.getId());
             student.setMajorCode(row.getOriginalMajor());
+            student.setLecturerCode(row.getLecturerCode());
             return student;
         }).toList();
     }
