@@ -14,6 +14,7 @@ import tech.djnd.sample.app.service.dto.ImportResultDTO;
 import tech.djnd.sample.app.service.dto.ResultPaginationDTO;
 import tech.djnd.sample.app.service.dto.StudentDTO;
 import tech.djnd.sample.app.util.anotation.ApiMessage;
+import java.util.Set;
 
 /**
  * REST controller for managing {@link tech.djnd.sample.app.domain.Student}.
@@ -94,12 +95,13 @@ public class StudentResource {
      */
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    @ApiMessage("Import students successfully")
+    @ApiMessage("Student import processed")
     public ResponseEntity<ImportResultDTO> importStudentsFromExcel(
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(name = "confirmedMajorCodes", required = false) Set<String> confirmedMajorCodes) {
 
         log.debug("REST request to import students from Excel: filename={}", file.getOriginalFilename());
-        ImportResultDTO result = studentService.importFromExcel(file);
+        ImportResultDTO result = studentService.importFromExcel(file, confirmedMajorCodes);
         return ResponseEntity.ok(result);
     }
 }

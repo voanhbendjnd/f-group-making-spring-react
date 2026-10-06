@@ -256,8 +256,14 @@
       "missingMajor": "Missing Major Code (Column D)",
       "missingMemberCode": "Missing Member Code (Column E)",
       "missingEmail": "Missing Email (Column F)",
-      "invalidEmail": "Email format \"{{email}}\" is invalid"
-    }
+      "invalidEmail": "Email format \"{{email}}\" is invalid",
+      "invalidMajorFormat": "The major code must follow the first underscore and contain 1–20 letters, digits or hyphens."
+    },
+    "newMajorsTitle": "Confirm new majors",
+    "createMajorsAndImport": "Create majors and import",
+    "newMajorsDescription": "These major codes are missing from the catalog. Create them to continue importing students?",
+    "newMajorsNotice": "Each temporary name will be the major code. You can update the names in the major catalog after importing.",
+    "createdMajors": "Created majors: {{codes}}. Update their names when the information is available."
   },
   "majors": {
     "navLabel": "Major Management",

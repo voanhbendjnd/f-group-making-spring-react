@@ -256,8 +256,14 @@
       "missingMajor": "Thiếu Mã ngành (Cột D)",
       "missingMemberCode": "Thiếu Mã thành viên (Cột E)",
       "missingEmail": "Thiếu Email (Cột F)",
-      "invalidEmail": "Định dạng email \"{{email}}\" không hợp lệ"
-    }
+      "invalidEmail": "Định dạng email \"{{email}}\" không hợp lệ",
+      "invalidMajorFormat": "Mã ngành phải nằm sau dấu _ đầu tiên, gồm 1–20 chữ cái, chữ số hoặc dấu gạch ngang."
+    },
+    "newMajorsTitle": "Xác nhận tạo ngành mới",
+    "createMajorsAndImport": "Tạo ngành và nhập sinh viên",
+    "newMajorsDescription": "Các mã ngành dưới đây chưa có trong danh mục. Bạn có muốn tạo chúng để tiếp tục nhập sinh viên?",
+    "newMajorsNotice": "Tên ngành tạm thời sẽ giống mã ngành. Bạn có thể cập nhật tên thật trong danh mục ngành sau khi nhập.",
+    "createdMajors": "Đã tạo ngành: {{codes}}. Vui lòng cập nhật tên ngành khi có thông tin."
   },
   "majors": {
     "navLabel": "Quản lý ngành",

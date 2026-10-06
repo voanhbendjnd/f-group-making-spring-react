@@ -15,6 +15,8 @@ import java.util.Optional;
 public interface StudentRepository extends JpaRepository<Student, Long>, JpaSpecificationExecutor<Student> {
     List<Student> findByRollNumberIn(List<String> rollNumbers);
 
+    List<Student> findByRollNumberIgnoreCaseIn(List<String> rollNumbers);
+
     List<Student> findByMemberCodeIgnoreCaseIn(List<String> memberCodes);
 
 
