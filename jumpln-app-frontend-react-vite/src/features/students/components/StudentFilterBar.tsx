@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, X, Filter, Loader2 } from 'lucide-react';
+import { Search, X, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { MajorSearchFilter } from './MajorSearchFilter';
+import { Button } from '@/components/common/Button';
 import type { StudentFilterParams } from '../types';
 
 export interface StudentFilterBarProps {
@@ -20,12 +21,14 @@ export const StudentFilterBar: React.FC<StudentFilterBarProps> = ({
   const { t } = useTranslation();
   // Local state for smooth typing without lag or focus loss
   const [searchTerm, setSearchTerm] = useState(filters.search || '');
+  const [lastExternalSearch, setLastExternalSearch] = useState(filters.search || '');
   const [majorResetVersion, setMajorResetVersion] = useState(0);
 
   // Synchronize when filters are modified from the outside (e.g. reset or clear)
-  useEffect(() => {
+  if (lastExternalSearch !== (filters.search || '')) {
+    setLastExternalSearch(filters.search || '');
     setSearchTerm(filters.search || '');
-  }, [filters.search]);
+  }
 
   // Debounced search trigger (350ms)
   useEffect(() => {
@@ -79,14 +82,6 @@ export const StudentFilterBar: React.FC<StudentFilterBarProps> = ({
     setMajorResetVersion((version) => version + 1);
     onReset();
   };
-
-  const hasActiveFilters =
-    Boolean(searchTerm) ||
-    Boolean(filters.search) ||
-    Boolean(filters.majorSearch) ||
-    filters.majorId !== undefined ||
-    filters.activated !== undefined ||
-    filters.hasActivationKey !== undefined;
 
   let currentStatusValue = 'all';
   if (filters.activated === true) currentStatusValue = 'activated';
@@ -218,19 +213,11 @@ export const StudentFilterBar: React.FC<StudentFilterBarProps> = ({
         </div>
 
         {/* Reset button */}
-        {hasActiveFilters && (
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="btn btn-ghost btn-sm"
-              style={{ width: '100%', color: 'var(--color-text-muted)' }}
-            >
-              <Filter size={14} />
-              <span>{t('students.clearFilters')}</span>
-            </button>
-          </div>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Button type="button" variant="secondary" icon={<X size={16} />} onClick={handleReset}>
+            {t('students.clearFilters')}
+          </Button>
+        </div>
       </div>
     </div>
   );

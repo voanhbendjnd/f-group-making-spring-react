@@ -2,6 +2,8 @@ package tech.djnd.sample.app.web.rest;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -47,7 +49,7 @@ public class StudentResource {
             @RequestParam(name = "majorId", required = false) Integer majorId,
             @RequestParam(name = "activated", required = false) Boolean activated,
             @RequestParam(name = "hasActivationKey", required = false) Boolean hasActivationKey,
-            Pageable pageable) {
+            @PageableDefault(size = 20, sort = {"createdDate", "userId"}, direction = Sort.Direction.DESC) Pageable pageable) {
 
         log.debug("REST request to get students with filter: search={}, majorCode={}, activated={}, hasKey={}",
                 search, majorCode, activated, hasActivationKey);

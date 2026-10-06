@@ -46,8 +46,9 @@ public class MajorService {
     }
 
     @Transactional(readOnly = true)
-    public ResultPaginationDTO getMajors(String search, Pageable pageable) {
-        Page<Major> page = majorRepository.findAll(MajorSpecifications.withSearch(search), pageable);
+    public ResultPaginationDTO getMajors(String search, Boolean temporaryName, Pageable pageable) {
+        Page<Major> page = majorRepository.findAll(MajorSpecifications.withSearch(search)
+                .and(MajorSpecifications.withTemporaryName(temporaryName)), pageable);
         List<MajorDTO> majors = new ArrayList<>();
         for (Major major : page.getContent()) {
             majors.add(toDTO(major));

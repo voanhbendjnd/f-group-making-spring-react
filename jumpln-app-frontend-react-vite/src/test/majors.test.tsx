@@ -159,6 +159,39 @@ describe('Major management', () => {
     await waitFor(() => expect(majorApi.getMajors).toHaveBeenLastCalledWith({ page: 1, size: 20 }));
   });
 
+  it('combines search and name filters, resets pagination and clears them', async () => {
+    vi.mocked(majorApi.getMajors).mockResolvedValue({
+      meta: { page: 1, pageSize: 10, pages: 2, total: 11 }, result: [major],
+    });
+    renderPage();
+    fireEvent.click(await screen.findByRole('button', { name: 'Next page' }));
+    await waitFor(() => expect(majorApi.getMajors).toHaveBeenLastCalledWith({ page: 2, size: 10 }));
+    fireEvent.change(screen.getByLabelText('Search code or name'), { target: { value: ' SE ' } });
+    fireEvent.change(screen.getByLabelText('Major name'), { target: { value: 'temporary' } });
+    expect(screen.queryByRole('button', { name: 'Apply filters' })).not.toBeInTheDocument();
+    await waitFor(() => expect(majorApi.getMajors).toHaveBeenLastCalledWith({ page: 1, size: 10, search: 'SE', temporaryName: true }));
+    fireEvent.change(screen.getByLabelText('Major name'), { target: { value: 'named' } });
+    await waitFor(() => expect(majorApi.getMajors).toHaveBeenLastCalledWith({ page: 1, size: 10, search: 'SE', temporaryName: false }));
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    await waitFor(() => expect(majorApi.getMajors).toHaveBeenLastCalledWith({ page: 1, size: 10 }));
+    expect(screen.getByLabelText('Search code or name')).toHaveValue('');
+    expect(screen.getByLabelText('Major name')).toHaveValue('all');
+  });
+
+  it('shows a filtered empty state and lets the admin clear it', async () => {
+    vi.mocked(majorApi.getMajors).mockImplementation(async (params) => ({
+      meta: { page: 1, pageSize: 10, pages: params.search ? 0 : 1, total: params.search ? 0 : 1 },
+      result: params.search ? [] : [major],
+    }));
+    renderPage();
+    await screen.findByRole('table');
+    fireEvent.change(screen.getByLabelText('Search code or name'), { target: { value: 'unknown' } });
+    expect(await screen.findByText('No matching majors')).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Clear filters' }).at(-1)!);
+    expect(await screen.findByRole('table')).toBeInTheDocument();
+    expect(screen.getByLabelText('Search code or name')).toHaveValue('');
+  });
+
   it('shows a translated list error and retries on request', async () => {
     vi.mocked(majorApi.getMajors).mockRejectedValueOnce({ status: 500 });
     renderPage();

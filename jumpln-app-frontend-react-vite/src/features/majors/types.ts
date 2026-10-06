@@ -11,10 +11,13 @@ export interface MajorFormValues {
 
 export interface MajorListParams {
   search?: string;
+  temporaryName?: boolean;
   sort?: string;
   page: number;
   size: number;
 }
+
+export type MajorFilters = Pick<MajorListParams, 'search' | 'temporaryName'>;
 
 export interface PaginatedMajors {
   meta: {

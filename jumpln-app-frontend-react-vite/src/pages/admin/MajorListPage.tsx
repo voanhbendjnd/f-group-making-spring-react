@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { GraduationCap, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -11,11 +11,12 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { PageHeader } from '@/components/common/PageHeader';
 import { majorApi } from '@/features/majors/api/majorApi';
 import { MajorDetailsModal } from '@/features/majors/components/MajorDetailsModal';
+import { MajorFilterBar } from '@/features/majors/components/MajorFilterBar';
 import { MajorFormModal } from '@/features/majors/components/MajorFormModal';
 import { MajorPagination } from '@/features/majors/components/MajorPagination';
 import { MajorTable } from '@/features/majors/components/MajorTable';
 import { getMajorErrorKey } from '@/features/majors/utils/majorErrors';
-import type { Major } from '@/features/majors/types';
+import type { Major, MajorFilters } from '@/features/majors/types';
 
 export function MajorListPage() {
   const { t } = useTranslation();
@@ -23,6 +24,12 @@ export function MajorListPage() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(10);
+  const [filters, setFilters] = useState<MajorFilters>({});
+  const [filterResetVersion, setFilterResetVersion] = useState(0);
+  const applyFilters = useCallback((nextFilters: MajorFilters) => {
+    setFilters(nextFilters);
+    setPage(1);
+  }, []);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMajor, setEditingMajor] = useState<Major | null>(null);
   const [detailId, setDetailId] = useState<number | null>(null);
@@ -31,8 +38,8 @@ export function MajorListPage() {
   const [deleteErrorKey, setDeleteErrorKey] = useState('');
 
   const { data, isLoading, isFetching, isError, error, refetch } = useQuery({
-    queryKey: ['majors', 'list', { page, size }],
-    queryFn: () => majorApi.getMajors({ page, size }),
+    queryKey: ['majors', 'list', { page, size, ...filters }],
+    queryFn: () => majorApi.getMajors({ page, size, ...filters }),
     placeholderData: keepPreviousData,
   });
 
@@ -81,19 +88,28 @@ export function MajorListPage() {
   }
 
   const majors = data?.result || [];
+  const hasFilters = Boolean(filters.search) || filters.temporaryName !== undefined;
+
+  function clearFilters() {
+    setFilters({});
+    setPage(1);
+    setFilterResetVersion((version) => version + 1);
+  }
 
   return (
     <div>
       <PageHeader title={t('majors.title')} description={t('majors.description')}
         action={<Button icon={<Plus size={16} />} onClick={openCreate}>{t('majors.create')}</Button>} />
 
+      <MajorFilterBar key={filterResetVersion} filters={filters} onApply={applyFilters} />
+
       {isLoading ? <LoadingSpinner message={t('majors.loadingList')} /> : isError ? (
         <ErrorState title={t('majors.errorTitle')} message={t(getMajorErrorKey(error))} onRetry={() => refetch()} />
       ) : majors.length === 0 ? (
-        <EmptyState title={t(page > 1 ? 'majors.emptyPageTitle' : 'majors.emptyTitle')}
-          description={t(page > 1 ? 'majors.emptyPageDescription' : 'majors.emptyDescription')}
-          icon={<GraduationCap size={32} />} actionText={t(page > 1 ? 'majors.firstPage' : 'majors.create')}
-          onAction={page > 1 ? () => setPage(1) : openCreate} />
+        <EmptyState title={t(page > 1 ? 'majors.emptyPageTitle' : hasFilters ? 'majors.emptyFilteredTitle' : 'majors.emptyTitle')}
+          description={t(page > 1 ? 'majors.emptyPageDescription' : hasFilters ? 'majors.emptyFilteredDescription' : 'majors.emptyDescription')}
+          icon={<GraduationCap size={32} />} actionText={t(page > 1 ? 'majors.firstPage' : hasFilters ? 'majors.clearFilters' : 'majors.create')}
+          onAction={page > 1 ? () => setPage(1) : hasFilters ? clearFilters : openCreate} />
       ) : (
         <div style={{ opacity: isFetching ? 0.65 : 1, transition: 'opacity 0.2s ease-in-out' }}>
           <MajorTable majors={majors} isLoading={isFetching} onView={(major) => setDetailId(major.id)}

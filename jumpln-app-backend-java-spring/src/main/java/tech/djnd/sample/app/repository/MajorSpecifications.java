@@ -15,6 +15,15 @@ public final class MajorSpecifications {
         return (root, query, cb) -> matchingPredicate(root, cb, search);
     }
 
+    public static Specification<Major> withTemporaryName(Boolean temporaryName) {
+        return (root, query, cb) -> {
+            if (temporaryName == null) return cb.conjunction();
+            Predicate sameName = cb.equal(cb.lower(cb.trim(root.get("name"))),
+                    cb.lower(cb.trim(root.get("code"))));
+            return temporaryName ? sameName : cb.not(sameName);
+        };
+    }
+
     public static Predicate matchingPredicate(Root<Major> root, CriteriaBuilder cb, String search) {
         if (search == null || search.isBlank()) return cb.conjunction();
         String[] words = search.trim().toLowerCase(Locale.ROOT).split("\\s+");

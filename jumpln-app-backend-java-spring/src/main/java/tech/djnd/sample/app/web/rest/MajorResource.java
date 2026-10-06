@@ -2,6 +2,7 @@ package tech.djnd.sample.app.web.rest;
 
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -43,8 +44,9 @@ public class MajorResource {
     @GetMapping
     @ApiMessage("Get major list successfully")
     public ResponseEntity<ResultPaginationDTO> getMajors(@RequestParam(name = "search", required = false) String search,
-                                                        @PageableDefault(sort = "id") Pageable pageable) {
-        return ResponseEntity.ok(majorService.getMajors(search, pageable));
+                                                        @RequestParam(name = "temporaryName", required = false) Boolean temporaryName,
+                                                        @PageableDefault(sort = {"createdDate", "id"}, direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(majorService.getMajors(search, temporaryName, pageable));
     }
 
     @GetMapping("/{id}")

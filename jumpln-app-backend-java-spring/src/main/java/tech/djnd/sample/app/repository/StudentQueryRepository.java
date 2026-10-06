@@ -8,6 +8,7 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.stereotype.Repository;
@@ -17,6 +18,8 @@ import tech.djnd.sample.app.domain.Major;
 import tech.djnd.sample.app.service.projection.StudentRow;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
 
 @Repository
 public class StudentQueryRepository {
@@ -70,13 +73,14 @@ public class StudentQueryRepository {
 //        if (predicate != null) cq.where(predicate);
 
         if (pageable.getSort().isSorted()) {
-            cq.orderBy(
-                    QueryUtils.toOrders(
-                            pageable.getSort(),
-                            root,
-                            cb
-                    )
-            );        }
+            List<Order> orders = new ArrayList<>();
+            Set<String> userProperties = Set.of("createdDate", "lastModifiedDate", "email", "activated");
+            for (Sort.Order order : pageable.getSort()) {
+                orders.addAll(QueryUtils.toOrders(Sort.by(order),
+                        userProperties.contains(order.getProperty()) ? user : root, cb));
+            }
+            cq.orderBy(orders);
+        }
 
         List<StudentRow> content = entityManager.createQuery(cq)
                 .setFirstResult((int) pageable.getOffset())

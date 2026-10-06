@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import jakarta.persistence.EntityManager;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import tech.djnd.sample.app.domain.Student;
@@ -48,6 +50,9 @@ class StudentSpecificationsTest {
     private Student student2;
     private Student student3;
     private Student student4;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @BeforeEach
     void setUp() {
@@ -260,6 +265,28 @@ class StudentSpecificationsTest {
         assertThat(row.rollNumber()).isEqualTo("SE30003");
         assertThat(row.email()).isEqualTo("expired.key@fpt.edu.vn");
         assertThat(row.activated()).isFalse();
+    }
+
+    @Test
+    void newestStudentsUseUserCreationTimeAndIdToBreakTies() {
+        entityManager.flush();
+        entityManager.createNativeQuery("UPDATE users SET created_date = :created")
+                .setParameter("created", java.sql.Timestamp.valueOf("2023-01-01 00:00:00")).executeUpdate();
+        entityManager.createNativeQuery("UPDATE users SET created_date = :created WHERE id IN (:first, :second)")
+                .setParameter("created", java.sql.Timestamp.valueOf("2024-01-01 00:00:00"))
+                .setParameter("first", activeUser.getId()).setParameter("second", pendingUserWithValidKey.getId()).executeUpdate();
+        var spec = StudentSpecifications.withFilter(null, null, null, null);
+        var sort = Sort.by(Sort.Direction.DESC, "createdDate", "userId");
+        var firstPage = studentQueryRepository.search(spec, PageRequest.of(0, 2, sort));
+        assertThat(firstPage.getContent()).extracting(StudentRow::userId)
+                .containsExactly(pendingUserWithValidKey.getId(), activeUser.getId());
+        var secondPage = studentQueryRepository.search(spec, PageRequest.of(1, 2, sort));
+        assertThat(secondPage.getContent()).extracting(StudentRow::userId)
+                .containsExactly(pendingUserWithoutKey.getId(), pendingUserWithExpiredKey.getId());
+        assertThat(firstPage.getTotalElements()).isEqualTo(4);
+        var explicitSort = studentQueryRepository.search(spec, PageRequest.of(0, 10, Sort.by("rollNumber")));
+        assertThat(explicitSort.getContent()).extracting(StudentRow::rollNumber)
+                .containsExactly("GD40004", "IA20002", "SE10001", "SE30003");
     }
 
     @Test

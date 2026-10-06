@@ -68,9 +68,24 @@ client có thể thử lại, khi đó ngành đã được request khác tạo 
 
 ## Tìm ngành và lọc sinh viên
 
+Hai API danh sách mặc định trả bản ghi mới nhất trước nếu không truyền `sort`:
+
+- `GET /api/students`: `createdDate,desc`, rồi `userId,desc` khi trùng thời gian.
+  `createdDate` lấy từ tài khoản User, giống trường ngày tạo trong dữ liệu trả về;
+  không thêm trường hoặc quan hệ vào entity Student.
+- `GET /api/majors`: `createdDate,desc`, rồi `id,desc` khi trùng thời gian.
+
+Truyền `sort` để thay thứ tự mặc định, ví dụ `sort=rollNumber,asc` cho sinh viên
+hoặc `sort=code,asc` cho ngành.
+
 - `GET /api/majors?search=...&page=1&size=10&sort=code,asc`: tìm mã hoặc tên ngành.
   Các từ được kết hợp AND; mỗi từ khớp mã hoặc tên, không phân biệt hoa/thường.
   `%` và `_` trong nội dung tìm kiếm là ký tự thường.
+- `GET /api/majors?temporaryName=true`: ngành có tên tạm, `name` trùng `code` sau
+  khi trim và bỏ qua hoa/thường. `temporaryName=false` lấy ngành có tên khác mã.
+  Không truyền tham số này lấy cả hai loại; có thể kết hợp với `search`, `page`,
+  `size`, `sort`. Đây là kiểm tra tên hiện tại, không phải nguồn tạo ngành.
+  Ví dụ: `/api/majors?search=SE&temporaryName=true&page=1&size=10`.
 - `GET /api/students?majorSearch=...`: sinh viên thuộc các ngành khớp mã/tên.
 - `GET /api/students?majorId=...`: lọc chính xác theo ID. ID được ưu tiên nếu cả hai tham số được gửi.
 - `majorCode` query cũ vẫn được chấp nhận như alias của `majorSearch` khi không gửi `majorSearch`.
@@ -79,3 +94,10 @@ client có thể thử lại, khi đó ngành đã được request khác tạo 
 Ô tìm ngành đề xuất sau 350 ms. Nhập chữ thì lọc theo chữ; chọn gợi ý thì lọc bằng ID.
 Sửa nội dung đã chọn xóa ID cũ ngay. Xóa trắng bỏ bộ lọc. Có thể dùng phím mũi tên,
 Enter để chọn gợi ý, Escape để đóng. Enter khi không chọn gợi ý áp dụng tìm chữ.
+
+Trang quản lý ngành có ô tìm mã/tên và bộ lọc tên tạm/tên khác mã. Tìm kiếm tự
+áp dụng sau khi ngừng nhập 350 ms; Enter áp dụng ngay. Chọn loại tên áp dụng
+ngay; đổi bộ lọc về trang đầu. “Xóa bộ lọc” khôi phục danh sách đầy đủ và hủy
+từ khóa đang chờ áp dụng. Danh sách rỗng do lọc có thông báo riêng.
+Danh sách sinh viên luôn hiển thị nút “Xóa bộ lọc” để xóa tìm kiếm, ngành,
+trạng thái tài khoản và trạng thái lời mời, đồng thời về trang đầu.

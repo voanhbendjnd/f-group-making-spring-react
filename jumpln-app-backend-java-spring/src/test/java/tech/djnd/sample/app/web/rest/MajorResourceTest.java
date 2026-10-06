@@ -77,6 +77,47 @@ class MajorResourceTest {
     }
 
     @Test
+    void defaultSortUsesCreationTimeThenIdAndExplicitSortOverridesIt() throws Exception {
+        Major first = saveMajor("SORTTESTA", "Sorttest Alpha");
+        Major second = saveMajor("SORTTESTB", "Sorttest Beta");
+        Major third = saveMajor("SORTTESTC", "Sorttest Gamma");
+        entityManager.createNativeQuery("UPDATE majors SET created_date = :created WHERE id IN (:first, :third)")
+                .setParameter("created", java.sql.Timestamp.valueOf("2024-01-01 00:00:00"))
+                .setParameter("first", first.getId()).setParameter("third", third.getId()).executeUpdate();
+        entityManager.createNativeQuery("UPDATE majors SET created_date = :created WHERE id = :id")
+                .setParameter("created", java.sql.Timestamp.valueOf("2023-01-01 00:00:00"))
+                .setParameter("id", second.getId()).executeUpdate();
+        entityManager.clear();
+        mockMvc.perform(get("/api/majors").param("search", "sorttest").param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.result[0].id").value(third.getId()))
+                .andExpect(jsonPath("$.data.result[1].id").value(first.getId()))
+                .andExpect(jsonPath("$.data.meta.total").value(3));
+        mockMvc.perform(get("/api/majors").param("search", "sorttest").param("size", "2").param("page", "2"))
+                .andExpect(jsonPath("$.data.result[0].id").value(second.getId()));
+        mockMvc.perform(get("/api/majors").param("search", "sorttest").param("sort", "id,asc"))
+                .andExpect(jsonPath("$.data.result[0].id").value(first.getId()))
+                .andExpect(jsonPath("$.data.result[1].id").value(second.getId()));
+    }
+
+    @Test
+    void temporaryNameFilterCombinesWithSearchAndPagination() throws Exception {
+        saveMajor("FILTERTESTA", "filtertesta");
+        saveMajor("FILTERTESTB", "Filtertest Named Major");
+        saveMajor("FILTERTESTC", "FILTERTESTC");
+        mockMvc.perform(get("/api/majors").param("search", "filtertest").param("temporaryName", "true").param("size", "1"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.meta.total").value(2))
+                .andExpect(jsonPath("$.data.result.length()").value(1));
+        mockMvc.perform(get("/api/majors").param("search", "filtertest").param("temporaryName", "false"))
+                .andExpect(jsonPath("$.data.meta.total").value(1))
+                .andExpect(jsonPath("$.data.result[0].code").value("FILTERTESTB"));
+        mockMvc.perform(get("/api/majors").param("search", "filtertest"))
+                .andExpect(jsonPath("$.data.meta.total").value(3));
+        mockMvc.perform(get("/api/majors").param("temporaryName", "invalid"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void getMissingMajorReturnsNotFound() throws Exception {
         mockMvc.perform(get("/api/majors/2147483647"))
                 .andExpect(status().isNotFound());

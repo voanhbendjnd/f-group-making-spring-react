@@ -1,6 +1,9 @@
 package tech.djnd.sample.app.web.rest;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,6 +22,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -60,6 +64,18 @@ class StudentResourceSecurityTest {
 
         mockMvc.perform(get("/api/students"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_ADMIN")
+    void listingDefaultsToNewestFirstAndAcceptsExplicitSort() throws Exception {
+        mockMvc.perform(get("/api/students")).andExpect(status().isOk());
+        ArgumentCaptor<Pageable> defaultPage = ArgumentCaptor.forClass(Pageable.class);
+        verify(studentService).getStudents(isNull(), isNull(), isNull(), isNull(), isNull(), defaultPage.capture());
+        assertThat(defaultPage.getValue().getSort()).isEqualTo(Sort.by(Sort.Direction.DESC, "createdDate", "userId"));
+        mockMvc.perform(get("/api/students").param("sort", "rollNumber,asc")).andExpect(status().isOk());
+        verify(studentService).getStudents(isNull(), isNull(), isNull(), isNull(), isNull(),
+                org.mockito.ArgumentMatchers.argThat(pageable -> pageable.getSort().equals(Sort.by("rollNumber"))));
     }
 
     @Test
