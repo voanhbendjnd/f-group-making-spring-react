@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, X, Filter, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { MajorSearchFilter } from './MajorSearchFilter';
 import type { StudentFilterParams } from '../types';
 
 export interface StudentFilterBarProps {
@@ -19,16 +20,12 @@ export const StudentFilterBar: React.FC<StudentFilterBarProps> = ({
   const { t } = useTranslation();
   // Local state for smooth typing without lag or focus loss
   const [searchTerm, setSearchTerm] = useState(filters.search || '');
-  const [majorCodeTerm, setMajorCodeTerm] = useState(filters.majorCode || '');
+  const [majorResetVersion, setMajorResetVersion] = useState(0);
 
   // Synchronize when filters are modified from the outside (e.g. reset or clear)
   useEffect(() => {
     setSearchTerm(filters.search || '');
   }, [filters.search]);
-
-  useEffect(() => {
-    setMajorCodeTerm(filters.majorCode || '');
-  }, [filters.majorCode]);
 
   // Debounced search trigger (350ms)
   useEffect(() => {
@@ -40,19 +37,7 @@ export const StudentFilterBar: React.FC<StudentFilterBarProps> = ({
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  // Debounced majorCode trigger (350ms)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const trimmed = majorCodeTerm.trim();
-      if (trimmed !== (filters.majorCode || '')) {
-        onFilterChange({ ...filters, majorCode: trimmed, page: 1 });
-      }
-    }, 350);
-
-    return () => clearTimeout(timer);
-  }, [majorCodeTerm]);
+  }, [searchTerm, filters, onFilterChange]);
 
   // Immediately apply on Enter without triggering page reload or form submit
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -61,7 +46,6 @@ export const StudentFilterBar: React.FC<StudentFilterBarProps> = ({
       onFilterChange({
         ...filters,
         search: searchTerm.trim(),
-        majorCode: majorCodeTerm.trim(),
         page: 1,
       });
     }
@@ -92,15 +76,15 @@ export const StudentFilterBar: React.FC<StudentFilterBarProps> = ({
 
   const handleReset = () => {
     setSearchTerm('');
-    setMajorCodeTerm('');
+    setMajorResetVersion((version) => version + 1);
     onReset();
   };
 
   const hasActiveFilters =
     Boolean(searchTerm) ||
-    Boolean(majorCodeTerm) ||
     Boolean(filters.search) ||
-    Boolean(filters.majorCode) ||
+    Boolean(filters.majorSearch) ||
+    filters.majorId !== undefined ||
     filters.activated !== undefined ||
     filters.hasActivationKey !== undefined;
 
@@ -199,20 +183,7 @@ export const StudentFilterBar: React.FC<StudentFilterBarProps> = ({
           </div>
         </div>
 
-        {/* Major Code filter */}
-        <div>
-          <label className="form-label" style={{ marginBottom: '0.375rem' }}>
-            {t('students.majorLabel')}
-          </label>
-          <input
-            type="text"
-            className="form-control"
-            placeholder={t('students.majorPlaceholder')}
-            value={majorCodeTerm}
-            onChange={(e) => setMajorCodeTerm(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-        </div>
+        <MajorSearchFilter key={majorResetVersion} filters={filters} onFilterChange={onFilterChange} />
 
         {/* Account status filter */}
         <div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StudentFilterBar } from '../features/students/components/StudentFilterBar';
 
 describe('StudentFilterBar Component', () => {
@@ -8,7 +9,7 @@ describe('StudentFilterBar Component', () => {
     page: 1,
     size: 10,
     search: '',
-    majorCode: '',
+    majorSearch: '',
   };
 
   it('allows user to type smoothly without inputs being disabled', () => {
@@ -16,12 +17,12 @@ describe('StudentFilterBar Component', () => {
     const handleReset = vi.fn();
 
     render(
-      <StudentFilterBar
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><StudentFilterBar
         filters={initialFilters}
         onFilterChange={handleFilterChange}
         onReset={handleReset}
         isLoading={true}
-      />
+      /></QueryClientProvider>
     );
 
     const searchInput = screen.getByPlaceholderText('Nhập mã SV, họ tên hoặc email...');
@@ -37,12 +38,12 @@ describe('StudentFilterBar Component', () => {
     const handleReset = vi.fn();
 
     render(
-      <StudentFilterBar
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><StudentFilterBar
         filters={initialFilters}
         onFilterChange={handleFilterChange}
         onReset={handleReset}
         isLoading={false}
-      />
+      /></QueryClientProvider>
     );
 
     const searchInput = screen.getByPlaceholderText('Nhập mã SV, họ tên hoặc email...');
@@ -62,12 +63,12 @@ describe('StudentFilterBar Component', () => {
     const handleReset = vi.fn();
 
     render(
-      <StudentFilterBar
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><StudentFilterBar
         filters={initialFilters}
         onFilterChange={handleFilterChange}
         onReset={handleReset}
         isLoading={false}
-      />
+      /></QueryClientProvider>
     );
 
     const searchInput = screen.getByPlaceholderText('Nhập mã SV, họ tên hoặc email...');
