@@ -41,6 +41,9 @@ class StudentSpecificationsTest {
     private User pendingUserWithExpiredKey;
     private User pendingUserWithoutKey;
 
+    @Autowired
+    private MajorRepository majorRepository;
+
     private Student student1;
     private Student student2;
     private Student student3;
@@ -65,8 +68,7 @@ class StudentSpecificationsTest {
         student1.setUserId(activeUser.getId());
         student1.setRollNumber("SE10001");
         student1.setFullName("Nguyen Van Active");
-        student1.setMajorId(1);
-        student1.setMajorCode("SE");
+        student1.setMajorId(majorRepository.findByCode("SE").orElseThrow().getId());
         student1.setMemberCode("MEM001");
         student1 = studentRepository.save(student1);
 
@@ -84,8 +86,7 @@ class StudentSpecificationsTest {
         student2.setUserId(pendingUserWithValidKey.getId());
         student2.setRollNumber("IA20002");
         student2.setFullName("Tran Thi Pending");
-        student2.setMajorId(2);
-        student2.setMajorCode("IA");
+        student2.setMajorId(majorRepository.findByCode("IA").orElseThrow().getId());
         student2.setMemberCode("MEM002");
         student2 = studentRepository.save(student2);
 
@@ -103,8 +104,7 @@ class StudentSpecificationsTest {
         student3.setUserId(pendingUserWithExpiredKey.getId());
         student3.setRollNumber("SE30003");
         student3.setFullName("Le Van Expired");
-        student3.setMajorId(1);
-        student3.setMajorCode("SE");
+        student3.setMajorId(majorRepository.findByCode("SE").orElseThrow().getId());
         student3.setMemberCode("MEM003");
         student3 = studentRepository.save(student3);
 
@@ -121,8 +121,7 @@ class StudentSpecificationsTest {
         student4.setUserId(pendingUserWithoutKey.getId());
         student4.setRollNumber("GD40004");
         student4.setFullName("Pham Van NoKey");
-        student4.setMajorId(3);
-        student4.setMajorCode("GD");
+        student4.setMajorId(majorRepository.findByCode("GD").orElseThrow().getId());
         student4.setMemberCode("MEM004");
         student4 = studentRepository.save(student4);
     }
@@ -142,6 +141,28 @@ class StudentSpecificationsTest {
         List<Student> result = studentRepository.findAll(spec);
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getRollNumber()).isEqualTo("SE10001");
+    }
+
+    @Test
+    void majorTextMatchesCodeOrNameWhileSelectedIdIsExact() {
+        int kt = majorRepository.findByCode("KT").orElseThrow().getId();
+        int mkt = majorRepository.findByCode("MKT").orElseThrow().getId();
+        student1.setMajorId(kt);
+        student2.setMajorId(mkt);
+        studentRepository.flush();
+        assertThat(studentRepository.findAll(StudentSpecifications.withFilter(null, "kt", null, null, null)))
+                .extracting(Student::getUserId).containsExactlyInAnyOrder(student1.getUserId(), student2.getUserId());
+        assertThat(studentRepository.findAll(StudentSpecifications.withFilter(null, "kt", kt, null, null)))
+                .extracting(Student::getUserId).containsExactly(student1.getUserId());
+        assertThat(studentRepository.findAll(StudentSpecifications.withFilter(null, "software engineering", null, null, null)))
+                .extracting(Student::getUserId).containsExactly(student3.getUserId());
+        assertThat(studentRepository.findAll(StudentSpecifications.withFilter(null, "%", null, null, null))).isEmpty();
+        assertThat(studentRepository.findAll(StudentSpecifications.withFilter(null, null, mkt, false, null)))
+                .extracting(Student::getUserId).containsExactly(student2.getUserId());
+        var page = studentQueryRepository.search(StudentSpecifications.withFilter(null, null, kt, null, null), PageRequest.of(0, 10));
+        assertThat(page.getTotalElements()).isEqualTo(1);
+        assertThat(page.getContent().getFirst().majorCode()).isEqualTo("KT");
+        assertThat(page.getContent().getFirst().majorName()).isEqualTo("Korean Studies");
     }
 
     @Test

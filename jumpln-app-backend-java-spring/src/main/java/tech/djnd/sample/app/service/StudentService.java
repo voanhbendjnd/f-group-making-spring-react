@@ -143,17 +143,16 @@ public class StudentService {
 //        student.setEmail(dto.getEmail());
         student.setMemberCode(dto.getMemberCode());
         student.setMajorId(dto.getMajorId());
-        student.setMajorCode(dto.getMajorCode());
         return student;
     }
 
     @Transactional(readOnly = true)
     public ResultPaginationDTO getStudents(
-            String search, String majorCode, Boolean activated,
+            String search, String majorSearch, Integer majorId, Boolean activated,
             Boolean hasActivationKey, Pageable pageable) {
 
         Specification<Student> spec =
-                StudentSpecifications.withFilter(search, majorCode, activated, hasActivationKey);
+                StudentSpecifications.withFilter(search, majorSearch, majorId, activated, hasActivationKey);
         Page<StudentRow> page = studentQueryRepository.search(spec, pageable);
 
         List<StudentDTO> studentDTOs = page.getContent().stream()
@@ -212,8 +211,8 @@ public class StudentService {
     /**
      * Activate and send emails to all unactivated students matching filter criteria.
      */
-    public BatchActivationResultDTO activateAllMatching(String search, String majorCode) {
-        Specification<Student> spec = StudentSpecifications.withFilter(search, majorCode, false, null);
+    public BatchActivationResultDTO activateAllMatching(String search, String majorSearch, Integer majorId) {
+        Specification<Student> spec = StudentSpecifications.withFilter(search, majorSearch, majorId, false, null);
         List<Student> matchingStudents = studentRepository.findAll(spec);
 
         List<Long> userIds = matchingStudents.stream()
